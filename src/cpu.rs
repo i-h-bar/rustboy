@@ -1,2 +1,1 @@
-
-pub struct CPU:
+pub struct CPU;

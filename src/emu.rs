@@ -3,6 +3,8 @@ use crate::cpu::CPU;
 use crate::ppu::PPU;
 use crate::register::Register;
 use crate::tpu::Timer;
+use std::thread;
+use std::time::Duration;
 
 pub struct EMU {
     cartridge: Cartridge,
@@ -10,20 +12,37 @@ pub struct EMU {
     register: Register,
     ppu: PPU,
     timer: Timer,
-    context: EMUContext
-}
-
-struct EMUContext {
     running: bool,
     paused: bool,
     ticks: u64,
 }
 
-
 impl EMU {
-    pub fn run(&self, rom: u32) {}
+    pub fn new(cartridge: Cartridge) -> Self {
+        let cpu = CPU {};
+        let register = Register {};
+        let ppu = PPU {};
+        let timer = Timer {};
 
-    pub fn context(&self) -> EMUContext {
-        EMUContext { running: true, paused: false, ticks: 0 }
+        EMU {
+            cartridge,
+            cpu,
+            register,
+            ppu,
+            timer,
+            running: false,
+            paused: false,
+            ticks: 0,
+        }
+    }
+
+    pub fn run(&mut self) {
+        self.running = true;
+
+        while self.running {
+            if self.paused {
+                thread::sleep(Duration::from_millis(10));
+            }
+        }
     }
 }
