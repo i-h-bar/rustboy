@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs;
 
 use lazy_static::lazy_static;
@@ -266,7 +267,7 @@ fn rom_size(value: u16) -> u16 {
 struct Header {
     entry: Vec<u8>,
     logo: Vec<u8>,
-    title: Vec<u8>,
+    title: String,
     new_lic_code: Vec<u8>,
     sgb_flag: u8,
     cart_type: u8,
@@ -287,10 +288,10 @@ pub struct Cartridge {
 }
 
 impl Header {
-    fn from(rom_data: &Vec<u8>) -> Self {
+    fn from(rom_data: &Vec<u8>) -> Result<Self, Box<dyn Error>> {
         let entry = rom_data[0x100..=0x103].to_vec();
         let logo = rom_data[0x104..=0x133].to_vec();
-        let title = rom_data[0x134..=0x143].to_vec();
+        let title = String::from_utf8(rom_data[0x134..=0x143].to_vec())?;
         let new_lic_code = rom_data[0x144..=0x145].to_vec();
         let sgb_flag = rom_data[0x146];
         let cart_type = rom_data[0x147];
@@ -302,7 +303,9 @@ impl Header {
         let checksum = rom_data[0x14D];
         let global_checksum = rom_data[0x14E..=0x14F].to_vec();
 
-        Self {
+        println!("{title}");
+
+        Ok(Self {
             entry,
             logo,
             title,
@@ -316,7 +319,7 @@ impl Header {
             version,
             checksum,
             global_checksum,
-        }
+        })
     }
 }
 
@@ -325,9 +328,14 @@ impl Cartridge {
         let rom_data = fs::read(rom_file).expect("Could not open ROM");
         let rom_size = rom_data.len();
         let filename = rom_file.to_string();
-        let header = Header::from(&rom_data);
+        let header = Header::from(&rom_data).expect("Could not read header correctly");
 
-        Self { filename, rom_size, rom_data, header }
+        Self {
+            filename,
+            rom_size,
+            rom_data,
+            header,
+        }
     }
 
     fn checksum(&mut self) -> bool {
