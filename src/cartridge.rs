@@ -286,7 +286,7 @@ pub struct Cartridge {
 }
 
 impl Header {
-    fn from(rom_data: &Vec<u8>) -> Result<Self, Box<dyn Error>> {
+    fn from(rom_data: &Vec<u8>) -> Self {
         let entry = rom_data[0x100..=0x103].to_vec();
         let logo = rom_data[0x104..=0x133].to_vec();
         let title = rom_data[0x134..=0x143]
@@ -314,7 +314,7 @@ impl Header {
             panic!("Checksum FAILED");
         }
 
-        Ok(Self {
+        Self {
             entry,
             logo,
             title,
@@ -325,19 +325,19 @@ impl Header {
             ram_size,
             dest_code,
             version,
-        })
+        }
     }
 
     fn get_licence(old_lic_code: u8, new_lic_code: Vec<u8>) -> &'static str {
         if old_lic_code == 33 {
             let key = new_lic_code.iter().map(|&c| c as char).collect::<String>();
             match LIC_MAP.get(key.as_str()) {
-                None => "No Code",
+                None => "None",
                 Some(code) => *code,
             }
         } else {
             match OLD_LIC_MAP.get(&old_lic_code) {
-                None => "No Code",
+                None => "None",
                 Some(code) => *code,
             }
         }
