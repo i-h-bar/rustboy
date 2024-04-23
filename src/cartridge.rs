@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::error::Error;
+use std::fmt::{Debug, Display};
 use std::fs;
 
 use lazy_static::lazy_static;
@@ -268,16 +269,13 @@ struct Header {
     entry: Vec<u8>,
     logo: Vec<u8>,
     title: String,
-    new_lic_code: Vec<u8>,
+    licence: &'static str,
     sgb_flag: u8,
     cart_type: u8,
     rom_size: u16,
     ram_size: u8,
     dest_code: u8,
-    old_lic_code: u8,
     version: u8,
-    checksum: u8,
-    global_checksum: Vec<u8>,
 }
 
 pub struct Cartridge {
@@ -291,7 +289,10 @@ impl Header {
     fn from(rom_data: &Vec<u8>) -> Result<Self, Box<dyn Error>> {
         let entry = rom_data[0x100..=0x103].to_vec();
         let logo = rom_data[0x104..=0x133].to_vec();
-        let title = String::from_utf8(rom_data[0x134..=0x143].to_vec())?;
+        let title = rom_data[0x134..=0x143]
+            .iter()
+            .map(|&c| c as char)
+            .collect::<String>();
         let new_lic_code = rom_data[0x144..=0x145].to_vec();
         let sgb_flag = rom_data[0x146];
         let cart_type = rom_data[0x147];
@@ -303,23 +304,52 @@ impl Header {
         let checksum = rom_data[0x14D];
         let global_checksum = rom_data[0x14E..=0x14F].to_vec();
 
-        println!("{title}");
+        let licence = Header::get_licence(old_lic_code, new_lic_code);
+        let checksum_pass =
+            Header::checksum(global_checksum, rom_data[0x134..=0x14C].to_vec(), checksum);
+
+        if checksum_pass {
+            println!("Checksum PASSED");
+        } else {
+            panic!("Checksum FAILED");
+        }
 
         Ok(Self {
             entry,
             logo,
             title,
-            new_lic_code,
+            licence,
             sgb_flag,
             cart_type,
             rom_size,
             ram_size,
             dest_code,
-            old_lic_code,
             version,
-            checksum,
-            global_checksum,
         })
+    }
+
+    fn get_licence(old_lic_code: u8, new_lic_code: Vec<u8>) -> &'static str {
+        if old_lic_code == 33 {
+            let key = new_lic_code.iter().map(|&c| c as char).collect::<String>();
+            match LIC_MAP.get(key.as_str()) {
+                None => "No Code",
+                Some(code) => *code,
+            }
+        } else {
+            match OLD_LIC_MAP.get(&old_lic_code) {
+                None => "No Code",
+                Some(code) => *code,
+            }
+        }
+    }
+
+    fn checksum(global_checksum: Vec<u8>, checksum_vec: Vec<u8>, assert_checksum: u8) -> bool {
+        let mut checksum: i16 = 0;
+        for num in checksum_vec {
+            checksum = checksum - (num as i16) - 1;
+        }
+
+        checksum.to_be_bytes()[1] == assert_checksum
     }
 }
 
@@ -336,15 +366,6 @@ impl Cartridge {
             rom_data,
             header,
         }
-    }
-
-    fn checksum(&mut self) -> bool {
-        let mut checksum: u16 = 0;
-        for num in &mut self.rom_data[0x0134..=0x014C] {
-            checksum = checksum - (*num as u16) - 1;
-        }
-
-        checksum.to_be_bytes()[1] == self.rom_data[0x014D]
     }
 }
 

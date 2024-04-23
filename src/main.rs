@@ -1,5 +1,7 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 use crate::cartridge::Cartridge;
-use std::fs;
 
 mod cartridge;
 mod cpu;
@@ -9,5 +11,5 @@ mod register;
 mod tpu;
 
 fn main() {
-    let cart = Cartridge::from("01-special.gb");
+    let cart = Cartridge::from("test.gb");
 }
