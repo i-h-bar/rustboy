@@ -1,4 +1,3 @@
-use std::arch::x86_64::_mm256_rcp_ps;
 use std::collections::HashMap;
 use std::fs;
 
@@ -280,7 +279,7 @@ struct Header {
     global_checksum: Vec<u8>,
 }
 
-pub struct Cartridge{
+pub struct Cartridge {
     filename: String,
     rom_size: usize,
     pub rom_data: Vec<u8>,
@@ -316,7 +315,7 @@ impl Header {
             old_lic_code,
             version,
             checksum,
-            global_checksum
+            global_checksum,
         }
     }
 }
@@ -328,7 +327,7 @@ impl Cartridge {
         let filename = rom_file.to_string();
         let header = Header::from(&rom_data);
 
-        Self { filename, rom_size, rom_data, header}
+        Self { filename, rom_size, rom_data, header }
     }
 
     fn checksum(&mut self) -> bool {
