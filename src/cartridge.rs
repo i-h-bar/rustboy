@@ -432,4 +432,26 @@ mod tests {
     fn rom_size_no_great_then_8() {
         let _ = rom_size(9);
     }
+
+    #[test]
+    fn test_to_string() {
+        let bytes = "hello world".as_bytes();
+        let string = to_string(bytes);
+
+        assert_eq!("hello world", string)
+    }
+
+    #[test]
+    fn test_old_lic_code() {
+        let lic_code = Header::get_licence(0x1, vec![0, 0]);
+
+        assert_eq!(lic_code, "Nintendo")
+    }
+
+    #[test]
+    fn test_new_lic_code() {
+        let lic_code = Header::get_licence(0x33, vec![48, 49]);
+
+        assert_eq!(lic_code, "Nintendo R&D")
+    }
 }
