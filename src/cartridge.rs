@@ -363,7 +363,8 @@ impl Header {
         }
 
         if checksum.to_be_bytes()[1] != assert_checksum {
-            panic!("Checksum FAILED");
+            println!("Checksum FAILED");
+            std::process::exit(1);
         }
     }
 }
@@ -380,7 +381,13 @@ impl Display for Header {
 
 impl Cartridge {
     pub fn from(rom_file: &str) -> Self {
-        let rom_data = fs::read(rom_file).expect("Could not open ROM");
+        let rom_data = match fs::read(rom_file) {
+            Ok(file) => file,
+            Err(_) => {
+                println!("Could not read ROM: {}", rom_file);
+                std::process::exit(1);
+            }
+        };
         let rom_size = rom_data.len();
         let filename = rom_file.to_string();
         let header = Header::from(&rom_data);

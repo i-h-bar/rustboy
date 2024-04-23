@@ -11,5 +11,5 @@ mod register;
 mod tpu;
 
 fn main() {
-    let cart = Cartridge::from("test_2.gb");
+    let cart = Cartridge::from("test_roms/dmg-acid2.test");
 }
