@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::{Display, Formatter};
 use std::fs;
 
 use lazy_static::lazy_static;
@@ -307,13 +306,12 @@ impl Header {
         let old_lic_code = rom_data[0x14B];
         let version = rom_data[0x14C];
         let checksum = rom_data[0x14D];
-        let global_checksum = rom_data[0x14E..=0x14F].to_vec();
 
         let licence = Header::get_licence(old_lic_code, new_lic_code);
         let cart_type = Header::get_type(cart_code);
         let ram_size = Header::get_ram_size(ram_code);
 
-        Header::checksum(global_checksum, rom_data[0x134..=0x14C].to_vec(), checksum);
+        Header::checksum(rom_data[0x134..=0x14C].to_vec(), checksum);
 
         Self {
             entry,
@@ -358,7 +356,7 @@ impl Header {
         }
     }
 
-    fn checksum(global_checksum: Vec<u8>, checksum_vec: Vec<u8>, assert_checksum: u8) -> () {
+    fn checksum(checksum_vec: Vec<u8>, assert_checksum: u8) -> () {
         let mut checksum: i16 = 0;
         for num in checksum_vec {
             checksum = checksum - (num as i16) - 1;
