@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::error::Error;
-use std::fmt::{Debug, Display};
+use std::fmt::{Debug, Display, Formatter};
 use std::fs;
 
 use lazy_static::lazy_static;
@@ -8,7 +8,7 @@ use lazy_static::lazy_static;
 lazy_static! {
     static ref LIC_MAP: HashMap<&'static str, &'static str> = [
         ("00", "None"),
-        ("01", "Nintendo R&D1"),
+        ("01", "Nintendo R&D"),
         ("08", "Capcom"),
         ("13", "Electronic Arts"),
         ("18", "Hudson Soft"),
@@ -260,9 +260,17 @@ lazy_static! {
     .collect();
 }
 
+static RAM_SIZE: [u8; 6] = [0, 0, 8, 32, 128, 64];
+
 fn rom_size(value: u16) -> u16 {
     assert!(value <= 8);
     32 * (1 << value)
+}
+
+fn to_string(slice: &[u8]) -> String {
+    slice.iter()
+        .map(|&c| c as char)
+        .collect::<String>()
 }
 
 struct Header {
@@ -271,7 +279,7 @@ struct Header {
     title: String,
     licence: &'static str,
     sgb_flag: u8,
-    cart_type: u8,
+    cart_type: &'static str,
     rom_size: u16,
     ram_size: u8,
     dest_code: u8,
@@ -281,7 +289,7 @@ struct Header {
 pub struct Cartridge {
     filename: String,
     rom_size: usize,
-    pub rom_data: Vec<u8>,
+    rom_data: Vec<u8>,
     header: Header,
 }
 
@@ -289,15 +297,12 @@ impl Header {
     fn from(rom_data: &Vec<u8>) -> Self {
         let entry = rom_data[0x100..=0x103].to_vec();
         let logo = rom_data[0x104..=0x133].to_vec();
-        let title = rom_data[0x134..=0x143]
-            .iter()
-            .map(|&c| c as char)
-            .collect::<String>();
+        let title = to_string(&rom_data[0x134..=0x143]);
         let new_lic_code = rom_data[0x144..=0x145].to_vec();
         let sgb_flag = rom_data[0x146];
-        let cart_type = rom_data[0x147];
+        let cart_code = rom_data[0x147];
         let rom_size = rom_size(rom_data[0x148] as u16);
-        let ram_size = rom_data[0x149];
+        let ram_code = rom_data[0x149];
         let dest_code = rom_data[0x14A];
         let old_lic_code = rom_data[0x14B];
         let version = rom_data[0x14C];
@@ -305,14 +310,10 @@ impl Header {
         let global_checksum = rom_data[0x14E..=0x14F].to_vec();
 
         let licence = Header::get_licence(old_lic_code, new_lic_code);
-        let checksum_pass =
-            Header::checksum(global_checksum, rom_data[0x134..=0x14C].to_vec(), checksum);
+        let cart_type = Header::get_type(cart_code);
+        let ram_size = Header::get_ram_size(ram_code);
 
-        if checksum_pass {
-            println!("Checksum PASSED");
-        } else {
-            panic!("Checksum FAILED");
-        }
+        Header::checksum(global_checksum, rom_data[0x134..=0x14C].to_vec(), checksum);
 
         Self {
             entry,
@@ -328,9 +329,23 @@ impl Header {
         }
     }
 
+    fn get_ram_size(code: u8) -> u8 {
+        match RAM_SIZE.get(code as usize) {
+            Some(size) => *size,
+            None => 0
+        }
+    }
+
+    fn get_type(code: u8) -> &'static str {
+        match CART_TYPE_MAP.get(&code) {
+            Some(cart_type) => *cart_type,
+            None => "None"
+        }
+    }
+
     fn get_licence(old_lic_code: u8, new_lic_code: Vec<u8>) -> &'static str {
-        if old_lic_code == 33 {
-            let key = new_lic_code.iter().map(|&c| c as char).collect::<String>();
+        if old_lic_code == 0x33 {
+            let key = to_string(&new_lic_code);
             match LIC_MAP.get(key.as_str()) {
                 None => "None",
                 Some(code) => *code,
@@ -343,13 +358,25 @@ impl Header {
         }
     }
 
-    fn checksum(global_checksum: Vec<u8>, checksum_vec: Vec<u8>, assert_checksum: u8) -> bool {
+    fn checksum(global_checksum: Vec<u8>, checksum_vec: Vec<u8>, assert_checksum: u8) -> () {
         let mut checksum: i16 = 0;
         for num in checksum_vec {
             checksum = checksum - (num as i16) - 1;
         }
 
-        checksum.to_be_bytes()[1] == assert_checksum
+        if checksum.to_be_bytes()[1] != assert_checksum {
+            panic!("Checksum FAILED");
+        }
+    }
+}
+
+impl Display for Header {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "    Title    : {}\n    Type     : {}\n    ROM Size : {} KB\n    RAM Size : {} KB\n    LIC Code : {}\n    ROM Vers : {}\n    Checksum : PASSED",
+            self.title, self.cart_type, self.rom_size, self.ram_size, self.licence, self.version
+        )
     }
 }
 
@@ -358,7 +385,10 @@ impl Cartridge {
         let rom_data = fs::read(rom_file).expect("Could not open ROM");
         let rom_size = rom_data.len();
         let filename = rom_file.to_string();
-        let header = Header::from(&rom_data).expect("Could not read header correctly");
+        let header = Header::from(&rom_data);
+
+        println!("Cartridge Loaded...");
+        println!("{}", header);
 
         Self {
             filename,

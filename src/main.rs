@@ -11,5 +11,5 @@ mod register;
 mod tpu;
 
 fn main() {
-    let cart = Cartridge::from("test.gb");
+    let cart = Cartridge::from("test_2.gb");
 }
