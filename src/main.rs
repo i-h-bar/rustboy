@@ -7,8 +7,9 @@ mod cartridge;
 mod cpu;
 mod emu;
 mod ppu;
-mod register;
 mod tpu;
+mod bus;
+mod instruction;
 
 fn main() {
     let cart = Cartridge::from("test2.gb");

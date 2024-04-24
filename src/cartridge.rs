@@ -402,6 +402,14 @@ impl Cartridge {
             header,
         }
     }
+
+    pub fn read(&self, address: u16) -> u8 {
+        self.rom_data[address]
+    }
+
+    pub fn write(&mut self, address: u16, value: u8) {
+        self.rom_data[address] = value;
+    }
 }
 
 #[cfg(test)]
