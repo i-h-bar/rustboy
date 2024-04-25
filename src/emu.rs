@@ -18,21 +18,22 @@ pub struct EMU {
 
 impl EMU {
     pub fn new(cartridge: Cartridge) -> Self {
-        let cpu = CPU {};
-        let register = Register {};
-        let ppu = PPU {};
-        let timer = Timer {};
-
-        EMU {
-            cartridge,
-            cpu,
-            register,
-            ppu,
-            timer,
-            running: false,
-            paused: false,
-            ticks: 0,
-        }
+        todo!()
+        // let cpu = CPU {};
+        // let register = Register {};
+        // let ppu = PPU {};
+        // let timer = Timer {};
+        //
+        // EMU {
+        //     cartridge,
+        //     cpu,
+        //     register,
+        //     ppu,
+        //     timer,
+        //     running: false,
+        //     paused: false,
+        //     ticks: 0,
+        // }
     }
 
     pub fn run(&mut self) {

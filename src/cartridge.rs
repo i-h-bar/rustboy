@@ -404,11 +404,11 @@ impl Cartridge {
     }
 
     pub fn read(&self, address: u16) -> u8 {
-        self.rom_data[address]
+        self.rom_data[address as usize]
     }
 
     pub fn write(&mut self, address: u16, value: u8) {
-        self.rom_data[address] = value;
+        self.rom_data[address as usize] = value;
     }
 }
 
@@ -461,5 +461,11 @@ mod tests {
         let lic_code = Header::get_licence(0x33, vec![48, 49]);
 
         assert_eq!(lic_code, "Nintendo R&D")
+    }
+
+    #[test]
+    fn ram_size() {
+        let ram_size = Header::get_ram_size(3);
+        assert_eq!(ram_size, 32);
     }
 }

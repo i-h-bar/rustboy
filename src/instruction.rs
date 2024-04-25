@@ -12,7 +12,7 @@ lazy_static! {
             (0xC3, (InType::JP, Some(AddressMode::D16), None)),
             (0xF3, (InType::DI, None, None)),
         ]
-        .iter()
+        .into_iter()
         .collect();
 }
 
