@@ -1,14 +1,12 @@
 use crate::cartridge::Cartridge;
-use crate::cpu::{Register, CPU};
+use crate::cpu::CPU;
 use crate::ppu::PPU;
 use crate::tpu::Timer;
 use std::thread;
 use std::time::Duration;
 
 pub struct EMU {
-    cartridge: Cartridge,
     cpu: CPU,
-    register: Register,
     ppu: PPU,
     timer: Timer,
     running: bool,
@@ -17,23 +15,20 @@ pub struct EMU {
 }
 
 impl EMU {
-    pub fn new(cartridge: Cartridge) -> Self {
-        todo!()
-        // let cpu = CPU {};
-        // let register = Register {};
-        // let ppu = PPU {};
-        // let timer = Timer {};
-        //
-        // EMU {
-        //     cartridge,
-        //     cpu,
-        //     register,
-        //     ppu,
-        //     timer,
-        //     running: false,
-        //     paused: false,
-        //     ticks: 0,
-        // }
+    pub fn from(file: &str) -> Self {
+        let cartridge = Cartridge::from(file);
+        let cpu = CPU::from(cartridge);
+        let ppu = PPU {};
+        let timer = Timer {};
+
+        EMU {
+            cpu,
+            ppu,
+            timer,
+            running: false,
+            paused: false,
+            ticks: 0,
+        }
     }
 
     pub fn run(&mut self) {
@@ -42,7 +37,15 @@ impl EMU {
         while self.running {
             if self.paused {
                 thread::sleep(Duration::from_millis(10));
+                continue;
             }
+
+            self.cpu.step();
+            self.ticks += 1;
         }
+    }
+
+    pub fn cycles(cycle: u8) {
+
     }
 }

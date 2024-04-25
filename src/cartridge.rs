@@ -371,7 +371,7 @@ impl Display for Header {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "    Title    : {}\n    Type     : {}\n    ROM Size : {} KB\n    RAM Size : {} KB\n    LIC Code : {}\n    ROM Vers : {}\n    Checksum : PASSED",
+            "    Title    : {}\n    Type     : {}\n    ROM Size : {} KB\n    RAM Size : {} KB\n    LIC Code : {}\n    ROM Vers : {}\n    Checksum : PASSED\n",
             self.title, self.cart_type, self.rom_size, self.ram_size, self.licence, self.version
         )
     }

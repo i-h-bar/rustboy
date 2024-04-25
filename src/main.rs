@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::cartridge::Cartridge;
+use crate::emu::EMU;
 
 mod bus;
 mod cartridge;
@@ -12,5 +12,6 @@ mod ppu;
 mod tpu;
 
 fn main() {
-    let cart = Cartridge::from("test2.gb");
+    let mut emulation = EMU::from("test_roms/mem_timing.test");
+    emulation.run();
 }

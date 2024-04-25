@@ -15,12 +15,12 @@
 use crate::cartridge::Cartridge;
 
 pub struct Bus {
-    cartridge: Cartridge,
+    pub cartridge: Cartridge,
 }
 impl Bus {
-    pub fn read(&self, address: u16) -> u8 {
+    pub fn read(&self, address: u16) -> u16 {
         if address < 0x8000 {
-            return self.cartridge.read(address);
+            return self.cartridge.read(address) as u16;
         } else {
             todo!()
         }
