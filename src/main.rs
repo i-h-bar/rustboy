@@ -11,6 +11,6 @@ mod ppu;
 mod tpu;
 
 fn main() {
-    let mut emulation = EMU::from("test_roms/mem_timing.test");
+    let mut emulation = EMU::from("test2.gb");
     emulation.run();
 }
