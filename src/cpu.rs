@@ -11,9 +11,8 @@ pub struct Register {
     h: u8,
     l: u8,
     sp: u16,
-    pc: u16
+    pc: u16,
 }
-
 
 pub struct CPU {
     register: Register,
@@ -23,14 +22,12 @@ pub struct CPU {
     current_op_code: u8,
     instruction: Instruction,
     halted: bool,
-    stepping: bool
+    stepping: bool,
 }
 
 impl CPU {
     fn step(&self) {
-        if !self.halted {
-
-        }
+        if !self.halted {}
     }
 
     fn fetch_instruction(&mut self) {
@@ -42,7 +39,5 @@ impl CPU {
         todo!()
     }
 
-    fn execute(&self) {
-
-    }
+    fn execute(&self) {}
 }

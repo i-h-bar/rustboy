@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 
 lazy_static! {
-    static ref INSTRUCTION_MAP : HashMap<u8, (InType, Option<AddressMode>, Option<RegisterType>)> =
+    static ref INSTRUCTION_MAP: HashMap<u8, (InType, Option<AddressMode>, Option<RegisterType>)> =
         [
             (0x00, (InType::NOP, Some(AddressMode::IMP), None)),
             (0x05, (InType::DEC, Some(AddressMode::R), Some(RegisterType::B))),

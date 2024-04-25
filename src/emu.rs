@@ -1,5 +1,5 @@
 use crate::cartridge::Cartridge;
-use crate::cpu::{CPU, Register};
+use crate::cpu::{Register, CPU};
 use crate::ppu::PPU;
 use crate::tpu::Timer;
 use std::thread;

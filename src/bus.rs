@@ -12,16 +12,15 @@
 // 0xFF00 - 0xFF7F : I/O Registers
 // 0xFF80 - 0xFFFE : Zero Page
 
-
 use crate::cartridge::Cartridge;
 
 pub struct Bus {
-    cartridge: Cartridge
+    cartridge: Cartridge,
 }
 impl Bus {
     pub fn read(&self, address: u16) -> u8 {
         if address < 0x8000 {
-            return self.cartridge.read(address)
+            return self.cartridge.read(address);
         } else {
             todo!()
         }
@@ -42,13 +41,17 @@ mod tests {
 
     #[test]
     fn test_read() {
-        let bus = Bus{ cartridge: Cartridge::from("test_roms/01-special.test") };
+        let bus = Bus {
+            cartridge: Cartridge::from("test_roms/01-special.test"),
+        };
         assert_eq!(bus.read(0x101), 195)
     }
 
     #[test]
     fn test_write() {
-        let mut bus = Bus{ cartridge: Cartridge::from("test_roms/01-special.test") };
+        let mut bus = Bus {
+            cartridge: Cartridge::from("test_roms/01-special.test"),
+        };
         assert_ne!(bus.read(0x7999), 255);
         bus.write(0x7999, 255);
         assert_eq!(bus.read(0x7999), 255);

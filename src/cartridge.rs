@@ -267,9 +267,7 @@ fn rom_size(value: u16) -> u16 {
 }
 
 fn to_string(slice: &[u8]) -> String {
-    slice.iter()
-        .map(|&c| c as char)
-        .collect::<String>()
+    slice.iter().map(|&c| c as char).collect::<String>()
 }
 
 struct Header {
@@ -330,14 +328,14 @@ impl Header {
     fn get_ram_size(code: u8) -> u8 {
         match RAM_SIZE.get(code as usize) {
             Some(&size) => size,
-            None => 0
+            None => 0,
         }
     }
 
     fn get_type(code: u8) -> &'static str {
         match CART_TYPE_MAP.get(&code) {
             Some(&cart_type) => cart_type,
-            None => "None"
+            None => "None",
         }
     }
 

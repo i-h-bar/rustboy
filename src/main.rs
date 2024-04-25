@@ -3,15 +3,14 @@
 
 use crate::cartridge::Cartridge;
 
+mod bus;
 mod cartridge;
 mod cpu;
 mod emu;
+mod instruction;
 mod ppu;
 mod tpu;
-mod bus;
-mod instruction;
 
 fn main() {
-    let cart = Cartridge::from("test_roms/01-special.test");
-
+    let cart = Cartridge::from("test2.gb");
 }
