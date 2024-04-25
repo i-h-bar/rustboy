@@ -161,3 +161,62 @@ impl Instruction {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_instruction_from_op_code() {
+        let inst = Instruction::from(&0).unwrap();
+        match inst.in_type {
+            InType::NOP => {},
+            _ => panic!("Not correct instruction type")
+        }
+
+        match inst.address_mode {
+            Some(addr) => {
+                match addr {
+                    AddressMode::IMP => {},
+                    _ => panic!("Not correct instruction type")
+                }
+            },
+            None => panic!("Not correct instruction type")
+        }
+        assert!(inst.register_1.is_none());
+        assert!(inst.register_2.is_none());
+        assert!(inst.condition_type.is_none());
+        assert_eq!(inst.param, 0);
+    }
+
+    #[test]
+    fn test_0e() {
+        let inst = Instruction::from(&0x0E).unwrap();
+        match inst.in_type {
+            InType::LD => {},
+            _ => panic!("Not correct instruction type")
+        }
+
+        match inst.address_mode {
+            Some(addr) => {
+                match addr {
+                    AddressMode::RD8 => {},
+                    _ => panic!("Not correct instruction type")
+                }
+            },
+            None => panic!("Not correct instruction type")
+        }
+        match inst.register_1 {
+            Some(reg) => {
+                match reg {
+                    RegisterType::C => {},
+                    _ => panic!("Not correct reg type")
+                }
+            },
+            None => panic!("Not correct reg type")
+        }
+        assert!(inst.register_2.is_none());
+        assert!(inst.condition_type.is_none());
+        assert_eq!(inst.param, 0);
+    }
+}

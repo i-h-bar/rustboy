@@ -3,14 +3,14 @@ use crate::emu::EMU;
 use crate::instruction::{AddressMode, Instruction, RegisterType};
 
 pub struct Register {
-    a: u8,
-    f: u8,
-    b: u8,
-    c: u8,
-    d: u8,
-    e: u8,
-    h: u8,
-    l: u8,
+    a: u16,
+    f: u16,
+    b: u16,
+    c: u16,
+    d: u16,
+    e: u16,
+    h: u16,
+    l: u16,
     sp: u16,
     pc: u16,
 }
@@ -38,7 +38,7 @@ impl CPU {
             current_op_code: 0,
             instruction: Instruction::from(&0).unwrap(),
             halted: false,
-            stepping: false
+            stepping: false,
         }
     }
 
@@ -115,9 +115,7 @@ impl CPU {
         }
     }
 
-    fn execute(&self) {
-
-    }
+    fn execute(&self) {}
 
     fn read_register(&self, register: &Option<RegisterType>) -> u16 {
         match register {
@@ -127,14 +125,14 @@ impl CPU {
             Some(rt) => {
                 match rt {
                     RegisterType::NONE => 0,
-                    RegisterType::A => self.register.a as u16,
-                    RegisterType::F => self.register.f as u16,
-                    RegisterType::B => self.register.b as u16,
-                    RegisterType::C => self.register.c as u16,
-                    RegisterType::D => self.register.d as u16,
-                    RegisterType::E => self.register.e as u16,
-                    RegisterType::H => self.register.h as u16,
-                    RegisterType::L => self.register.l as u16,
+                    RegisterType::A => self.register.a,
+                    RegisterType::F => self.register.f,
+                    RegisterType::B => self.register.b,
+                    RegisterType::C => self.register.c,
+                    RegisterType::D => self.register.d,
+                    RegisterType::E => self.register.e,
+                    RegisterType::H => self.register.h,
+                    RegisterType::L => self.register.l,
                     RegisterType::AF => reverse(self.register.a),
                     RegisterType::BC => reverse(self.register.b),
                     RegisterType::DE => reverse(self.register.d),
@@ -148,8 +146,20 @@ impl CPU {
 }
 
 
-fn reverse(num: u8) -> u16 {
+fn reverse(num: u16) -> u16 {
     let num = num as u16;
 
     ((num & 0xFF00) >> 8) | ((num & 0x00FF) << 8)
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_reverse() {
+        assert_eq!(reverse(0x00EE), 0xEE00);
+        assert_eq!(reverse(0xEE00), 0x00EE)
+    }
 }
