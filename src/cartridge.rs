@@ -371,7 +371,7 @@ impl Display for Header {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "    Title    : {}\n    Type     : {}\n    ROM Size : {} KB\n    RAM Size : {} KB\n    LIC Code : {}\n    ROM Vers : {}\n    Checksum : PASSED\n",
+            "    Title    : {}\n    Type     : {}\n    ROM Size : {} KB\n    RAM Size : {} KB\n    LIC Code : {}\n    ROM Vers : {}\n    Checksum : PASSED",
             self.title, self.cart_type, self.rom_size, self.ram_size, self.licence, self.version
         )
     }
@@ -401,12 +401,20 @@ impl Cartridge {
         }
     }
 
-    pub fn read(&self, address: u16) -> u8 {
-        self.rom_data[address as usize]
+    pub fn read(&self, address: u16) -> u16 {
+        if address < 0x8000 {
+            return self.rom_data[address as usize] as u16
+        } else {
+            todo!()
+        }
     }
 
     pub fn write(&mut self, address: u16, value: u8) {
-        self.rom_data[address as usize] = value;
+        if address < 0x8000 {
+            self.rom_data[address as usize] = value;
+        } else {
+            todo!()
+        }
     }
 }
 
@@ -465,5 +473,20 @@ mod tests {
     fn ram_size() {
         let ram_size = Header::get_ram_size(3);
         assert_eq!(ram_size, 32);
+    }
+
+    #[test]
+    fn test_read() {
+        let cartridge = Cartridge::from("test_roms/01-special.test");
+
+        assert_eq!(cartridge.read(0x101), 195)
+    }
+
+    #[test]
+    fn test_write() {
+        let mut cartridge = Cartridge::from("test_roms/01-special.test");
+        assert_ne!(cartridge.read(0x7999), 255);
+        cartridge.write(0x7999, 255);
+        assert_eq!(cartridge.read(0x7999), 255);
     }
 }

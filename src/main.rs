@@ -3,7 +3,6 @@
 
 use crate::emu::EMU;
 
-mod bus;
 mod cartridge;
 mod cpu;
 mod emu;
