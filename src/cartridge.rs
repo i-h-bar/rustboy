@@ -329,14 +329,14 @@ impl Header {
 
     fn get_ram_size(code: u8) -> u8 {
         match RAM_SIZE.get(code as usize) {
-            Some(size) => *size,
+            Some(&size) => size,
             None => 0
         }
     }
 
     fn get_type(code: u8) -> &'static str {
         match CART_TYPE_MAP.get(&code) {
-            Some(cart_type) => *cart_type,
+            Some(&cart_type) => cart_type,
             None => "None"
         }
     }
@@ -346,12 +346,12 @@ impl Header {
             let key = to_string(&new_lic_code);
             match LIC_MAP.get(key.as_str()) {
                 None => "None",
-                Some(code) => *code,
+                Some(&code) => code,
             }
         } else {
             match OLD_LIC_MAP.get(&old_lic_code) {
                 None => "None",
-                Some(code) => *code,
+                Some(&code) => code,
             }
         }
     }
