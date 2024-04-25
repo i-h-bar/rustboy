@@ -13,7 +13,6 @@
 // 0xFF80 - 0xFFFE : Zero Page
 
 
-use std::net::AddrParseError;
 use crate::cartridge::Cartridge;
 
 pub struct Bus {
@@ -34,5 +33,24 @@ impl Bus {
         } else {
             todo!()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read() {
+        let bus = Bus{ cartridge: Cartridge::from("test_roms/01-special.test") };
+        assert_eq!(bus.read(0x101), 195)
+    }
+
+    #[test]
+    fn test_write() {
+        let mut bus = Bus{ cartridge: Cartridge::from("test_roms/01-special.test") };
+        assert_ne!(bus.read(0x7999), 255);
+        bus.write(0x7999, 255);
+        assert_eq!(bus.read(0x7999), 255);
     }
 }

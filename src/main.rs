@@ -12,5 +12,6 @@ mod bus;
 mod instruction;
 
 fn main() {
-    let cart = Cartridge::from("test2.gb");
+    let cart = Cartridge::from("test_roms/01-special.test");
+
 }
