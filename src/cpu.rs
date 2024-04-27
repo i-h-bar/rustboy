@@ -124,7 +124,7 @@ impl CPU {
             println!(
                 "Executed {:#04x}: {: <4} | PC: {:#06x} -> {:#06x}",
                 self.current_op_code,
-                self.instruction.in_type.to_string(),
+                self.instruction.in_type,
                 pc,
                 self.register.pc)
             ;
