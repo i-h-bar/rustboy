@@ -3,14 +3,14 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 
 lazy_static! {
-    static ref INSTRUCTION_MAP: HashMap<u8, (InType, Option<AddressMode>, Option<RegisterType>, Option<RegisterType>, Option<ConditionType>)> =
+    static ref INSTRUCTION_MAP: HashMap<u8, Instruction> =
         [
-            (0x00, (InType::NOP, Some(AddressMode::IMP), None, None, None)),
-            (0x05, (InType::DEC, Some(AddressMode::R), Some(RegisterType::B), None, None)),
-            (0x0E, (InType::LD, Some(AddressMode::RD8), Some(RegisterType::C), None, None)),
-            (0xAF, (InType::XOR, Some(AddressMode::R), Some(RegisterType::A), None, None)),
-            (0xC3, (InType::JP, Some(AddressMode::D16), None, None, None)),
-            (0xF3, (InType::DI, None, None, None, None)),
+            (0x00, Instruction{in_type: InType::NOP, address_mode: Some(AddressMode::IMP), register_1: None, register_2: None, condition_type: None, param: 0}),
+            (0x05, Instruction{in_type: InType::DEC, address_mode: Some(AddressMode::R), register_1: Some(RegisterType::B), register_2: None, condition_type: None, param: 0}),
+            (0x0E, Instruction{in_type: InType::LD, address_mode: Some(AddressMode::RD8), register_1: Some(RegisterType::C), register_2: None, condition_type: None, param: 0}),
+            (0xAF, Instruction{in_type: InType::XOR, address_mode: Some(AddressMode::R), register_1: Some(RegisterType::A), register_2: None, condition_type: None, param: 0}),
+            (0xC3, Instruction{in_type: InType::JP, address_mode: Some(AddressMode::D16), register_1: None, register_2: None, condition_type: None, param: 0}),
+            (0xF3, Instruction{in_type: InType::DI, address_mode: None, register_1: None, register_2: None, condition_type: None, param: 0}),
         ]
         .into_iter()
         .collect();
@@ -119,46 +119,18 @@ pub enum ConditionType {
 }
 
 pub struct Instruction {
-    pub in_type: &'static InType,
-    pub address_mode: &'static Option<AddressMode>,
-    pub register_1: &'static Option<RegisterType>,
-    pub register_2: &'static Option<RegisterType>,
-    pub condition_type: &'static Option<ConditionType>,
+    pub in_type: InType,
+    pub address_mode: Option<AddressMode>,
+    pub register_1: Option<RegisterType>,
+    pub register_2: Option<RegisterType>,
+    pub condition_type: Option<ConditionType>,
     pub param: u8,
 }
 
 impl Instruction {
-    pub fn from(opcode: &u8) -> Option<Self> {
-        let (
-            in_type,
-            address_mode,
-            register_1,
-            register_2,
-            condition_type
-        ) = INSTRUCTION_MAP.get(opcode)?;
-
-
-        Some(
-            Self {
-                in_type,
-                address_mode,
-                register_1,
-                register_2,
-                condition_type,
-                param: 0
-            }
-        )
-    }
-
-    pub fn default() -> Self {
-        Self {
-            in_type: &InType::NOP,
-            address_mode: &None,
-            register_1: &None,
-            register_2: &None,
-            condition_type: &None,
-            param: 0
-        }
+    pub fn from(opcode: u8) -> Option<&'static Self> {
+        let instruction = INSTRUCTION_MAP.get(&opcode)?;
+        Some(instruction)
     }
 }
 
@@ -168,19 +140,19 @@ mod tests {
 
     #[test]
     fn test_instruction_from_op_code() {
-        let inst = Instruction::from(&0).unwrap();
+        let inst = Instruction::from(0).unwrap();
         match inst.in_type {
-            InType::NOP => {},
+            InType::NOP => {}
             _ => panic!("Not correct instruction type")
         }
 
-        match inst.address_mode {
+        match &inst.address_mode {
             Some(addr) => {
                 match addr {
-                    AddressMode::IMP => {},
+                    AddressMode::IMP => {}
                     _ => panic!("Not correct instruction type")
                 }
-            },
+            }
             None => panic!("Not correct instruction type")
         }
         assert!(inst.register_1.is_none());
@@ -191,28 +163,28 @@ mod tests {
 
     #[test]
     fn test_0e() {
-        let inst = Instruction::from(&0x0E).unwrap();
+        let inst = Instruction::from(0x0E).unwrap();
         match inst.in_type {
-            InType::LD => {},
+            InType::LD => {}
             _ => panic!("Not correct instruction type")
         }
 
-        match inst.address_mode {
+        match &inst.address_mode {
             Some(addr) => {
                 match addr {
-                    AddressMode::RD8 => {},
+                    AddressMode::RD8 => {}
                     _ => panic!("Not correct instruction type")
                 }
-            },
+            }
             None => panic!("Not correct instruction type")
         }
-        match inst.register_1 {
+        match &inst.register_1 {
             Some(reg) => {
                 match reg {
-                    RegisterType::C => {},
+                    RegisterType::C => {}
                     _ => panic!("Not correct reg type")
                 }
-            },
+            }
             None => panic!("Not correct reg type")
         }
         assert!(inst.register_2.is_none());

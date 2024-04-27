@@ -10,6 +10,7 @@ mod instruction;
 mod ppu;
 mod tpu;
 
+
 fn main() {
     let mut emulation = EMU::from("test2.gb");
     emulation.run();

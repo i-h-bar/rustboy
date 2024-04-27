@@ -1,6 +1,6 @@
 use crate::cartridge::Cartridge;
 use crate::emu::EMU;
-use crate::instruction::{AddressMode, Instruction, RegisterType};
+use crate::instruction::{AddressMode, ConditionType, Instruction, InType, RegisterType};
 
 pub struct Register {
     a: u16,
@@ -22,7 +22,7 @@ pub struct CPU {
     mem_dest: u16,
     dest_is_mem: bool,
     current_op_code: u8,
-    instruction: Instruction,
+    instruction: &'static Instruction,
     halted: bool,
     stepping: bool,
 }
@@ -36,9 +36,71 @@ impl CPU {
             mem_dest: 0,
             dest_is_mem: false,
             current_op_code: 0,
-            instruction: Instruction::from(&0).unwrap(),
+            instruction: Instruction::from(0).unwrap(),
             halted: false,
             stepping: false,
+        }
+    }
+
+    fn execute(&mut self) {
+        self.process();
+    }
+
+    fn process(&mut self) {
+        match self.instruction.in_type {
+            InType::NONE => {}
+            InType::NOP => {}
+            InType::LD => {}
+            InType::INC => {}
+            InType::DEC => {}
+            InType::RLCA => {}
+            InType::ADD => {}
+            InType::RRCA => {}
+            InType::STOP => {}
+            InType::RLA => {}
+            InType::JR => {}
+            InType::RRA => {}
+            InType::DAA => {}
+            InType::CPL => {}
+            InType::SCF => {}
+            InType::CCF => {}
+            InType::HALT => {}
+            InType::ADC => {}
+            InType::SUB => {}
+            InType::SBC => {}
+            InType::AND => {}
+            InType::XOR => {}
+            InType::OR => {}
+            InType::CP => {}
+            InType::POP => {}
+            InType::JP => {
+                if self.check_condition() {
+                    self.register.pc = self.fetch_data;
+                    EMU::cycles(1);
+                }
+            }
+            InType::PUSH => {}
+            InType::RET => {}
+            InType::CB => {}
+            InType::CALL => {}
+            InType::RETI => {}
+            InType::LDH => {}
+            InType::JPHL => {}
+            InType::DI => {}
+            InType::EI => {}
+            InType::RST => {}
+            InType::ERR => {}
+            InType::RLC => {}
+            InType::RRC => {}
+            InType::RL => {}
+            InType::RR => {}
+            InType::SLA => {}
+            InType::SRA => {}
+            InType::SWAP => {}
+            InType::SRL => {}
+            InType::BIT => {}
+            InType::RES => {}
+            InType::SET => {}
         }
     }
 
@@ -56,7 +118,7 @@ impl CPU {
     fn fetch_instruction(&mut self) {
         self.current_op_code = self.cartridge.read(self.register.pc) as u8;
         self.register.pc += 1;
-        self.instruction = match Instruction::from(&self.current_op_code) {
+        self.instruction = match Instruction::from(self.current_op_code) {
             None => {
                 println!("\x1b[91mUnknown Instruction: \x1b[1;31;40m{:#02x}\x1b[0m", self.current_op_code);
                 std::process::exit(1);
@@ -107,15 +169,10 @@ impl CPU {
                     AddressMode::MR => {}
                     AddressMode::A16R => {}
                     AddressMode::RA16 => {}
-                    _ => {
-                        panic!("Address mode unknown");
-                    }
                 }
             }
         }
     }
-
-    fn execute(&self) {}
 
     fn read_register(&self, register: &Option<RegisterType>) -> u16 {
         match register {
@@ -143,12 +200,35 @@ impl CPU {
             }
         }
     }
+
+    pub fn check_condition(&self) -> bool {
+        let z_flag = bit(self.register.f as u8, 7);
+        let c_flag = bit(self.register.f as u8, 4);
+
+        match &self.instruction.condition_type {
+            None => {true}
+            Some(cond) => {
+                match cond {
+                    ConditionType::None => {true}
+                    ConditionType::NZ => {!z_flag}
+                    ConditionType::Z => {z_flag}
+                    ConditionType::NC => {!c_flag}
+                    ConditionType::C => {c_flag}
+                }
+            }
+        }
+    }
 }
 
+fn bit(a: u8, n: u8) -> bool {
+    if (a & (1 << n)) != 0 {
+        true
+    } else {
+        false
+    }
+}
 
 fn reverse(num: u16) -> u16 {
-    let num = num as u16;
-
     ((num & 0xFF00) >> 8) | ((num & 0x00FF) << 8)
 }
 
