@@ -1,6 +1,6 @@
 use crate::cartridge::Cartridge;
 use crate::emu::EMU;
-use crate::instruction::{AddressMode, ConditionType, Instruction, InType, RegisterType};
+use crate::instruction::{AddressMode, ConditionType, Instruction, INSTRUCTION_NAMES, InType, RegisterType};
 
 pub struct Register {
     a: u16,
@@ -83,7 +83,7 @@ impl CPU {
             InType::OR => {}
             InType::CP => {}
             InType::POP => {}
-            InType::JP => {
+            InType::JUMP => {
                 if self.check_condition() {
                     self.register.pc = self.fetch_data;
                     EMU::cycles(1);
@@ -120,8 +120,14 @@ impl CPU {
 
             self.fetch_instruction();
             self.fetch_data();
-            println!("Executing {:#02x}, PC = {:#04x}", self.current_op_code, pc);
             self.execute();
+            println!(
+                "Executed {:#04x}: {: <4} | PC: {:#06x} -> {:#06x}",
+                self.current_op_code,
+                self.instruction.in_type.to_string(),
+                pc,
+                self.register.pc)
+            ;
         }
     }
 
@@ -142,8 +148,8 @@ impl CPU {
         self.dest_is_mem = false;
 
         match &self.instruction.address_mode {
-            AddressMode::NONE => { return }
-            AddressMode::IMP => { return }
+            AddressMode::NONE => { return; }
+            AddressMode::IMP => { return; }
             AddressMode::RD16 => {}
             AddressMode::RR => {}
             AddressMode::MRR => {}
@@ -202,11 +208,11 @@ impl CPU {
 
     pub fn check_condition(&self) -> bool {
         match &self.instruction.condition_type {
-            ConditionType::NONE => {true}
-            ConditionType::NZ => {!self.register.z_flag()}
-            ConditionType::Z => {self.register.z_flag()}
-            ConditionType::NC => {!self.register.c_flag()}
-            ConditionType::C => {self.register.c_flag()}
+            ConditionType::NONE => { true }
+            ConditionType::NZ => { !self.register.z_flag() }
+            ConditionType::Z => { self.register.z_flag() }
+            ConditionType::NC => { !self.register.c_flag() }
+            ConditionType::C => { self.register.c_flag() }
         }
     }
 }

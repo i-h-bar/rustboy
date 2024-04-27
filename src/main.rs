@@ -12,6 +12,6 @@ mod tpu;
 
 
 fn main() {
-    let mut emulation = EMU::from("test2.gb");
+    let mut emulation = EMU::from("test.gb");
     emulation.run();
 }

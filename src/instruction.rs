@@ -1,6 +1,59 @@
 use std::collections::HashMap;
+use std::fmt;
+use std::fmt::Debug;
 
 use lazy_static::lazy_static;
+
+pub const INSTRUCTION_NAMES: [&str; 48] = [
+    "<NONE>",
+    "NOP",
+    "LD",
+    "INC",
+    "DEC",
+    "RLCA",
+    "ADD",
+    "RRCA",
+    "STOP",
+    "RLA",
+    "JR",
+    "RRA",
+    "DAA",
+    "CPL",
+    "SCF",
+    "CCF",
+    "HALT",
+    "ADC",
+    "SUB",
+    "SBC",
+    "AND",
+    "XOR",
+    "OR",
+    "CP",
+    "POP",
+    "JP",
+    "PUSH",
+    "RET",
+    "CB",
+    "CALL",
+    "RETI",
+    "LDH",
+    "JPHL",
+    "DI",
+    "EI",
+    "RST",
+    "IN_ERR",
+    "IN_RLC",
+    "IN_RRC",
+    "IN_RL",
+    "IN_RR",
+    "IN_SLA",
+    "IN_SRA",
+    "IN_SWAP",
+    "IN_SRL",
+    "IN_BIT",
+    "IN_RES",
+    "IN_SET"
+];
 
 lazy_static! {
     static ref INSTRUCTION_MAP: HashMap<u8, Instruction> =
@@ -9,7 +62,7 @@ lazy_static! {
             (0x05, Instruction{in_type: InType::DEC, address_mode: AddressMode::R, register_1: RegisterType::B, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
             (0x0E, Instruction{in_type: InType::LD, address_mode: AddressMode::RD8, register_1: RegisterType::C, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
             (0xAF, Instruction{in_type: InType::XOR, address_mode: AddressMode::R, register_1: RegisterType::A, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
-            (0xC3, Instruction{in_type: InType::JP, address_mode: AddressMode::D16, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+            (0xC3, Instruction{in_type: InType::JUMP, address_mode: AddressMode::D16, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
             (0xF3, Instruction{in_type: InType::DI, address_mode: AddressMode::NONE, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
         ]
         .into_iter()
@@ -59,6 +112,7 @@ pub enum RegisterType {
     PC,
 }
 
+#[derive(Debug)]
 pub enum InType {
     NONE,
     NOP,
@@ -85,7 +139,7 @@ pub enum InType {
     OR,
     CP,
     POP,
-    JP,
+    JUMP,
     PUSH,
     RET,
     CB,
@@ -109,6 +163,12 @@ pub enum InType {
     BIT,
     RES,
     SET,
+}
+
+impl fmt::Display for InType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        Debug::fmt(self, f)
+    }
 }
 
 pub enum ConditionType {
