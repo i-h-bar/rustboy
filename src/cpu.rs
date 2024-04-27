@@ -1,7 +1,9 @@
 use crate::cartridge::Cartridge;
 use crate::emu::EMU;
-use crate::instruction::{AddressMode, ConditionType, Instruction, INSTRUCTION_NAMES, InType, RegisterType};
+use crate::instruction::{AddressMode, ConditionType, Instruction, InstructionType, RegisterType};
 
+
+#[derive(Debug)]
 pub struct Register {
     a: u16,
     f: u16,
@@ -57,77 +59,86 @@ impl CPU {
     }
 
     fn process(&mut self) {
-        match self.instruction.in_type {
-            InType::NONE => {}
-            InType::NOP => {}
-            InType::LD => {}
-            InType::INC => {}
-            InType::DEC => {}
-            InType::RLCA => {}
-            InType::ADD => {}
-            InType::RRCA => {}
-            InType::STOP => {}
-            InType::RLA => {}
-            InType::JR => {}
-            InType::RRA => {}
-            InType::DAA => {}
-            InType::CPL => {}
-            InType::SCF => {}
-            InType::CCF => {}
-            InType::HALT => {}
-            InType::ADC => {}
-            InType::SUB => {}
-            InType::SBC => {}
-            InType::AND => {}
-            InType::XOR => {}
-            InType::OR => {}
-            InType::CP => {}
-            InType::POP => {}
-            InType::JUMP => {
+        match self.instruction.instruction_type {
+            InstructionType::NONE => {}
+            InstructionType::NOP => {}
+            InstructionType::LD => {}
+            InstructionType::INC => {}
+            InstructionType::DEC => {}
+            InstructionType::RLCA => {}
+            InstructionType::ADD => {}
+            InstructionType::RRCA => {}
+            InstructionType::STOP => {}
+            InstructionType::RLA => {}
+            InstructionType::JR => {}
+            InstructionType::RRA => {}
+            InstructionType::DAA => {}
+            InstructionType::CPL => {}
+            InstructionType::SCF => {}
+            InstructionType::CCF => {}
+            InstructionType::HALT => {}
+            InstructionType::ADC => {}
+            InstructionType::SUB => {}
+            InstructionType::SBC => {}
+            InstructionType::AND => {}
+            InstructionType::XOR => {}
+            InstructionType::OR => {}
+            InstructionType::CP => {}
+            InstructionType::POP => {}
+            InstructionType::JUMP => {
                 if self.check_condition() {
                     self.register.pc = self.fetch_data;
                     EMU::cycles(1);
                 }
             }
-            InType::PUSH => {}
-            InType::RET => {}
-            InType::CB => {}
-            InType::CALL => {}
-            InType::RETI => {}
-            InType::LDH => {}
-            InType::JPHL => {}
-            InType::DI => {}
-            InType::EI => {}
-            InType::RST => {}
-            InType::ERR => {}
-            InType::RLC => {}
-            InType::RRC => {}
-            InType::RL => {}
-            InType::RR => {}
-            InType::SLA => {}
-            InType::SRA => {}
-            InType::SWAP => {}
-            InType::SRL => {}
-            InType::BIT => {}
-            InType::RES => {}
-            InType::SET => {}
+            InstructionType::PUSH => {}
+            InstructionType::RET => {}
+            InstructionType::CB => {}
+            InstructionType::CALL => {}
+            InstructionType::RETI => {}
+            InstructionType::LDH => {}
+            InstructionType::JPHL => {}
+            InstructionType::DI => {}
+            InstructionType::EI => {}
+            InstructionType::RST => {}
+            InstructionType::ERR => {}
+            InstructionType::RLC => {}
+            InstructionType::RRC => {}
+            InstructionType::RL => {}
+            InstructionType::RR => {}
+            InstructionType::SLA => {}
+            InstructionType::SRA => {}
+            InstructionType::SWAP => {}
+            InstructionType::SRL => {}
+            InstructionType::BIT => {}
+            InstructionType::RES => {}
+            InstructionType::SET => {}
         }
     }
 
     pub fn step(&mut self) {
         if !self.halted {
-            let pc = self.register.pc;
+            let pc_before = self.register.pc;
+            let a_before = self.register.a;
+            let b_before = self.register.b;
+            let c_before = self.register.c;
 
             self.fetch_instruction();
             self.fetch_data();
             self.execute();
             println!(
-                "Executed {:#04x}: {: <4} | PC: {:#06x} -> {:#06x}",
+                "{:#04x}: {: <4} | PC: {:#06x} -> {:#06x} | a: {:#04x} -> {:#04x}; b: {:#04x} -> {:#04x}; c: {:#04x} -> {:#04x};",
                 self.current_op_code,
-                self.instruction.in_type.to_string(),
-                pc,
-                self.register.pc)
-            ;
+                self.instruction.instruction_type.to_string(),
+                pc_before,
+                self.register.pc,
+                a_before,
+                self.register.a,
+                b_before,
+                self.register.b,
+                c_before,
+                self.register.c
+            );
         }
     }
 
