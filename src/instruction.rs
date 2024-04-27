@@ -5,18 +5,19 @@ use lazy_static::lazy_static;
 lazy_static! {
     static ref INSTRUCTION_MAP: HashMap<u8, Instruction> =
         [
-            (0x00, Instruction{in_type: InType::NOP, address_mode: Some(AddressMode::IMP), register_1: None, register_2: None, condition_type: None, param: 0}),
-            (0x05, Instruction{in_type: InType::DEC, address_mode: Some(AddressMode::R), register_1: Some(RegisterType::B), register_2: None, condition_type: None, param: 0}),
-            (0x0E, Instruction{in_type: InType::LD, address_mode: Some(AddressMode::RD8), register_1: Some(RegisterType::C), register_2: None, condition_type: None, param: 0}),
-            (0xAF, Instruction{in_type: InType::XOR, address_mode: Some(AddressMode::R), register_1: Some(RegisterType::A), register_2: None, condition_type: None, param: 0}),
-            (0xC3, Instruction{in_type: InType::JP, address_mode: Some(AddressMode::D16), register_1: None, register_2: None, condition_type: None, param: 0}),
-            (0xF3, Instruction{in_type: InType::DI, address_mode: None, register_1: None, register_2: None, condition_type: None, param: 0}),
+            (0x00, Instruction{in_type: InType::NOP, address_mode: AddressMode::IMP, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+            (0x05, Instruction{in_type: InType::DEC, address_mode: AddressMode::R, register_1: RegisterType::B, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+            (0x0E, Instruction{in_type: InType::LD, address_mode: AddressMode::RD8, register_1: RegisterType::C, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+            (0xAF, Instruction{in_type: InType::XOR, address_mode: AddressMode::R, register_1: RegisterType::A, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+            (0xC3, Instruction{in_type: InType::JP, address_mode: AddressMode::D16, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+            (0xF3, Instruction{in_type: InType::DI, address_mode: AddressMode::NONE, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
         ]
         .into_iter()
         .collect();
 }
 
 pub enum AddressMode {
+    NONE,
     IMP,
     RD16,
     RR,
@@ -111,7 +112,7 @@ pub enum InType {
 }
 
 pub enum ConditionType {
-    None,
+    NONE,
     NZ,
     Z,
     NC,
@@ -120,10 +121,10 @@ pub enum ConditionType {
 
 pub struct Instruction {
     pub in_type: InType,
-    pub address_mode: Option<AddressMode>,
-    pub register_1: Option<RegisterType>,
-    pub register_2: Option<RegisterType>,
-    pub condition_type: Option<ConditionType>,
+    pub address_mode: AddressMode,
+    pub register_1: RegisterType,
+    pub register_2: RegisterType,
+    pub condition_type: ConditionType,
     pub param: u8,
 }
 
@@ -147,17 +148,21 @@ mod tests {
         }
 
         match &inst.address_mode {
-            Some(addr) => {
-                match addr {
-                    AddressMode::IMP => {}
-                    _ => panic!("Not correct instruction type")
-                }
-            }
-            None => panic!("Not correct instruction type")
+            AddressMode::IMP => {}
+            _ => panic!("Not correct instruction type")
         }
-        assert!(inst.register_1.is_none());
-        assert!(inst.register_2.is_none());
-        assert!(inst.condition_type.is_none());
+        match inst.register_1 {
+            RegisterType::NONE => {}
+            _ => panic!("Not correct reg type")
+        }
+        match inst.register_2 {
+            RegisterType::NONE => {}
+            _ => panic!("Not correct reg type")
+        }
+        match inst.condition_type {
+            ConditionType::NONE => {}
+            _ => panic!("Not correct reg type")
+        }
         assert_eq!(inst.param, 0);
     }
 
@@ -169,26 +174,25 @@ mod tests {
             _ => panic!("Not correct instruction type")
         }
 
-        match &inst.address_mode {
-            Some(addr) => {
-                match addr {
-                    AddressMode::RD8 => {}
-                    _ => panic!("Not correct instruction type")
-                }
-            }
-            None => panic!("Not correct instruction type")
+        match inst.address_mode {
+            AddressMode::RD8 => {}
+            _ => panic!("Not correct instruction type")
         }
-        match &inst.register_1 {
-            Some(reg) => {
-                match reg {
-                    RegisterType::C => {}
-                    _ => panic!("Not correct reg type")
-                }
-            }
-            None => panic!("Not correct reg type")
+        match inst.register_1 {
+            RegisterType::C => {}
+            _ => panic!("Not correct reg type")
         }
-        assert!(inst.register_2.is_none());
-        assert!(inst.condition_type.is_none());
+
+        match inst.register_2 {
+            RegisterType::NONE => {}
+            _ => panic!("Not correct reg type")
+        }
+
+        match inst.condition_type {
+            ConditionType::NONE => {}
+            _ => panic!("Not correct reg type")
+        }
+
         assert_eq!(inst.param, 0);
     }
 }

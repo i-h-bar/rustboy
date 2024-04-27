@@ -15,6 +15,16 @@ pub struct Register {
     pc: u16,
 }
 
+impl Register {
+    fn z_flag(&self) -> bool {
+        bit(self.f as u8, 7)
+    }
+
+    fn c_flag(&self) -> bool {
+        bit(self.f as u8, 4)
+    }
+}
+
 pub struct CPU {
     register: Register,
     cartridge: Cartridge,
@@ -132,90 +142,71 @@ impl CPU {
         self.dest_is_mem = false;
 
         match &self.instruction.address_mode {
-            None => { return; }
-            Some(address_mode) => {
-                match address_mode {
-                    AddressMode::IMP => { return; }
-                    AddressMode::RD16 => {}
-                    AddressMode::RR => {}
-                    AddressMode::MRR => {}
-                    AddressMode::R => {
-                        self.fetch_data = self.read_register(&self.instruction.register_1)
-                    }
-                    AddressMode::RD8 => {
-                        self.fetch_data = self.cartridge.read(self.register.pc);
-                        EMU::cycles(1);
-                        self.register.pc += 1;
-                    }
-                    AddressMode::RMR => {}
-                    AddressMode::RHLI => {}
-                    AddressMode::RHLD => {}
-                    AddressMode::HLIR => {}
-                    AddressMode::HLDR => {}
-                    AddressMode::RA8 => {}
-                    AddressMode::A8R => {}
-                    AddressMode::HLSPR => {}
-                    AddressMode::D16 => {
-                        let lo = self.cartridge.read(self.register.pc);
-                        EMU::cycles(1);
-                        let hi = self.cartridge.read(self.register.pc + 1);
-                        EMU::cycles(1);
-                        self.fetch_data = lo | (hi << 8);
-                        self.register.pc += 2;
-                    }
-                    AddressMode::D8 => {}
-                    AddressMode::D16R => {}
-                    AddressMode::MRD8 => {}
-                    AddressMode::MR => {}
-                    AddressMode::A16R => {}
-                    AddressMode::RA16 => {}
-                }
+            AddressMode::NONE => { return }
+            AddressMode::IMP => { return }
+            AddressMode::RD16 => {}
+            AddressMode::RR => {}
+            AddressMode::MRR => {}
+            AddressMode::R => {
+                self.fetch_data = self.read_register(&self.instruction.register_1)
             }
+            AddressMode::RD8 => {
+                self.fetch_data = self.cartridge.read(self.register.pc);
+                EMU::cycles(1);
+                self.register.pc += 1;
+            }
+            AddressMode::RMR => {}
+            AddressMode::RHLI => {}
+            AddressMode::RHLD => {}
+            AddressMode::HLIR => {}
+            AddressMode::HLDR => {}
+            AddressMode::RA8 => {}
+            AddressMode::A8R => {}
+            AddressMode::HLSPR => {}
+            AddressMode::D16 => {
+                let lo = self.cartridge.read(self.register.pc);
+                EMU::cycles(1);
+                let hi = self.cartridge.read(self.register.pc + 1);
+                EMU::cycles(1);
+                self.fetch_data = lo | (hi << 8);
+                self.register.pc += 2;
+            }
+            AddressMode::D8 => {}
+            AddressMode::D16R => {}
+            AddressMode::MRD8 => {}
+            AddressMode::MR => {}
+            AddressMode::A16R => {}
+            AddressMode::RA16 => {}
         }
     }
 
-    fn read_register(&self, register: &Option<RegisterType>) -> u16 {
+    fn read_register(&self, register: &RegisterType) -> u16 {
         match register {
-            None => {
-                panic!("Unknown Register Type");
-            }
-            Some(rt) => {
-                match rt {
-                    RegisterType::NONE => 0,
-                    RegisterType::A => self.register.a,
-                    RegisterType::F => self.register.f,
-                    RegisterType::B => self.register.b,
-                    RegisterType::C => self.register.c,
-                    RegisterType::D => self.register.d,
-                    RegisterType::E => self.register.e,
-                    RegisterType::H => self.register.h,
-                    RegisterType::L => self.register.l,
-                    RegisterType::AF => reverse(self.register.a),
-                    RegisterType::BC => reverse(self.register.b),
-                    RegisterType::DE => reverse(self.register.d),
-                    RegisterType::HL => reverse(self.register.h),
-                    RegisterType::SP => self.register.sp,
-                    RegisterType::PC => self.register.pc
-                }
-            }
+            RegisterType::NONE => 0,
+            RegisterType::A => self.register.a,
+            RegisterType::F => self.register.f,
+            RegisterType::B => self.register.b,
+            RegisterType::C => self.register.c,
+            RegisterType::D => self.register.d,
+            RegisterType::E => self.register.e,
+            RegisterType::H => self.register.h,
+            RegisterType::L => self.register.l,
+            RegisterType::AF => reverse(self.register.a),
+            RegisterType::BC => reverse(self.register.b),
+            RegisterType::DE => reverse(self.register.d),
+            RegisterType::HL => reverse(self.register.h),
+            RegisterType::SP => self.register.sp,
+            RegisterType::PC => self.register.pc
         }
     }
 
     pub fn check_condition(&self) -> bool {
-        let z_flag = bit(self.register.f as u8, 7);
-        let c_flag = bit(self.register.f as u8, 4);
-
         match &self.instruction.condition_type {
-            None => {true}
-            Some(cond) => {
-                match cond {
-                    ConditionType::None => {true}
-                    ConditionType::NZ => {!z_flag}
-                    ConditionType::Z => {z_flag}
-                    ConditionType::NC => {!c_flag}
-                    ConditionType::C => {c_flag}
-                }
-            }
+            ConditionType::NONE => {true}
+            ConditionType::NZ => {!self.register.z_flag()}
+            ConditionType::Z => {self.register.z_flag()}
+            ConditionType::NC => {!self.register.c_flag()}
+            ConditionType::C => {self.register.c_flag()}
         }
     }
 }
