@@ -121,7 +121,12 @@ lazy_static! {
 
             (0xC3, Instruction{instruction_type: InstructionType::JUMP, address_mode: AddressMode::D16, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
 
+            (0xE2, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::MRR, register_1: RegisterType::C,    register_2: RegisterType::A,condition_type: ConditionType::NONE,param: 0}),
+            (0xEA, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::A16R,register_1: RegisterType::NONE, register_2: RegisterType::A,condition_type: ConditionType::NONE,param: 0}),
+
+            (0xF2, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RMR, register_1: RegisterType::A, register_2: RegisterType::C,condition_type: ConditionType::NONE,param: 0}),
             (0xF3, Instruction{instruction_type: InstructionType::DI, address_mode: AddressMode::NONE, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+            (0xFA, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RA16, register_1: RegisterType::A,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
         ]
         .into_iter()
         .collect();
