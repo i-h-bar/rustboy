@@ -83,8 +83,27 @@ lazy_static! {
             (0x5E, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RMR, register_1: RegisterType::E, register_2: RegisterType::HL,condition_type: ConditionType::NONE,param: 0}),
             (0x5F, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::E, register_2: RegisterType::A,condition_type: ConditionType::NONE,param: 0}),
 
+            (0x60, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::H, register_2: RegisterType::B,condition_type: ConditionType::NONE,param: 0}),
+            (0x61, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::H, register_2: RegisterType::C,condition_type: ConditionType::NONE,param: 0}),
+            (0x62, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::H, register_2: RegisterType::D,condition_type: ConditionType::NONE,param: 0}),
+            (0x63, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::H, register_2: RegisterType::E,condition_type: ConditionType::NONE,param: 0}),
+            (0x64, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::H, register_2: RegisterType::H,condition_type: ConditionType::NONE,param: 0}),
+            (0x65, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::H, register_2: RegisterType::L,condition_type: ConditionType::NONE,param: 0}),
+            (0x66, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RMR, register_1: RegisterType::H, register_2: RegisterType::HL,condition_type: ConditionType::NONE,param: 0}),
+            (0x67, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::H, register_2: RegisterType::A,condition_type: ConditionType::NONE,param: 0}),
+            (0x68, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::L, register_2: RegisterType::B,condition_type: ConditionType::NONE,param: 0}),
+            (0x69, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::L, register_2: RegisterType::C,condition_type: ConditionType::NONE,param: 0}),
+            (0x6A, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::L, register_2: RegisterType::D,condition_type: ConditionType::NONE,param: 0}),
+            (0x6B, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::L, register_2: RegisterType::E,condition_type: ConditionType::NONE,param: 0}),
+            (0x6C, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::L, register_2: RegisterType::H,condition_type: ConditionType::NONE,param: 0}),
+            (0x6D, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::L, register_2: RegisterType::L,condition_type: ConditionType::NONE,param: 0}),
+            (0x6E, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RMR, register_1: RegisterType::L, register_2: RegisterType::HL,condition_type: ConditionType::NONE,param: 0}),
+            (0x6F, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR,  register_1: RegisterType::L, register_2: RegisterType::A,condition_type: ConditionType::NONE,param: 0}),
+
             (0xAF, Instruction{instruction_type: InstructionType::XOR, address_mode: AddressMode::R, register_1: RegisterType::A, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+
             (0xC3, Instruction{instruction_type: InstructionType::JUMP, address_mode: AddressMode::D16, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+
             (0xF3, Instruction{instruction_type: InstructionType::DI, address_mode: AddressMode::NONE, register_1: RegisterType::NONE, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
         ]
         .into_iter()
