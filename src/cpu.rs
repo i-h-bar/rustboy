@@ -240,17 +240,47 @@ impl CPU {
                 EMU::cycles(1);
                 self.set_register(RegisterType::HL, self.read_register(&RegisterType::HL) + 1)
             }
-            AddressMode::RHLD => {}
-            AddressMode::HLIR => {}
-            AddressMode::HLDR => {}
-            AddressMode::RA8 => {}
-            AddressMode::A8R => {}
-            AddressMode::HLSPR => {}
-            AddressMode::D8 => {}
-            AddressMode::D16R => {}
+            AddressMode::RHLD => {
+                self.fetch_data = self.cartridge.read(self.read_register(&self.instruction.register_2));
+                EMU::cycles(1);
+                self.set_register(RegisterType::HL, self.read_register(&RegisterType::HL) - 1)
+            }
+            AddressMode::HLIR => {
+                self.fetch_data = self.read_register(&self.instruction.register_2);
+                self.mem_dest = self.read_register(&self.instruction.register_1);
+                self.dest_is_mem = true;
+                self.set_register(RegisterType::HL, self.read_register(&RegisterType::HL) + 1);
+            }
+            AddressMode::HLDR => {
+                self.fetch_data = self.read_register(&self.instruction.register_2);
+                self.mem_dest = self.read_register(&self.instruction.register_1);
+                self.dest_is_mem = true;
+                self.set_register(RegisterType::HL, self.read_register(&RegisterType::HL) - 1);
+            }
+            AddressMode::RA8 => {
+                self.fetch_data = self.cartridge.read(self.register.pc);
+                EMU::cycles(1);
+                self.register.pc += 1;
+            }
+            AddressMode::A8R => {
+                self.mem_dest = self.cartridge.read(self.register.pc) | 0xFF00;
+                self.dest_is_mem = true;
+                EMU::cycles(1);
+                self.register.pc += 1;
+            }
+            AddressMode::HLSPR => {
+                self.fetch_data = self.cartridge.read(self.register.pc);
+                EMU::cycles(1);
+                self.register.pc += 1;
+            }
+            AddressMode::D8 => {
+                self.fetch_data = self.cartridge.read(self.register.pc);
+                EMU::cycles(1);
+                self.register.pc += 1;
+            }
+            AddressMode::D16R | AddressMode::A16R => {}
             AddressMode::MRD8 => {}
             AddressMode::MR => {}
-            AddressMode::A16R => {}
             AddressMode::RA16 => {}
         }
     }
