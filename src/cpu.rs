@@ -157,12 +157,13 @@ impl CPU {
             let a_before = self.register.a;
             let b_before = self.register.b;
             let c_before = self.register.c;
+            let f_before = self.register.f;
 
             self.fetch_instruction();
             self.fetch_data();
             self.execute();
             println!(
-                "{:#04x}: {: <4} | PC: {:#06x} -> {:#06x} | a: {:#04x} -> {:#04x}; b: {:#04x} -> {:#04x}; c: {:#04x} -> {:#04x};",
+                "{:#04x}: {: <4} | PC: {:#06x} -> {:#06x} | a: {:#04x} -> {:#04x}; b: {:#04x} -> {:#04x}; c: {:#04x} -> {:#04x} | {:#010b} -> {:#010b}",
                 self.current_op_code,
                 self.instruction.instruction_type.to_string(),
                 pc_before,
@@ -172,7 +173,9 @@ impl CPU {
                 b_before,
                 self.register.b,
                 c_before,
-                self.register.c
+                self.register.c,
+                f_before,
+                self.register.f
             );
         }
     }
