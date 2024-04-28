@@ -87,7 +87,46 @@ impl CPU {
         match self.instruction.instruction_type {
             InstructionType::NONE => {}
             InstructionType::NOP => {}
-            InstructionType::LD => {}
+            InstructionType::LD => {
+                if self.dest_is_mem {
+                    match self.instruction.register_2 {
+                        RegisterType::AF | RegisterType::BC | RegisterType::DE | RegisterType::HL | RegisterType::PC | RegisterType::SP => {
+                            EMU::cycles(1);
+                            self.cartridge.write16(self.mem_dest, self.fetch_data);
+                        }
+                        _ => {
+                            self.cartridge.write(self.mem_dest, self.fetch_data as u8);
+                        }
+                    }
+                    return
+                }
+
+                match self.instruction.address_mode {
+                    AddressMode::HLSPR => {
+                        let h_flag = if ((self.read_register(&self.instruction.register_2) as u8 ) & 0x0F + (self.fetch_data as u8 & 0x0F)) >= 0x10 {
+                            1
+                        } else {
+                            0
+                        };
+                        let c_flag = if ((self.read_register(&self.instruction.register_2)) & 0xFF00 + (self.fetch_data & 0xFF00)) >= 0x100 {
+                            1
+                        } else {
+                            0
+                        };
+
+                        self.register.set_flags(0, 0, h_flag, c_flag);
+
+                        self.set_register(
+                            &self.instruction.register_1,
+                            self.read_register(&self.instruction.register_2) + self.fetch_data
+                        );
+                    }
+                    _ => {
+                        self.set_register(&self.instruction.register_1, self.fetch_data)
+                    }
+                }
+
+            }
             InstructionType::INC => {}
             InstructionType::DEC => {}
             InstructionType::RLCA => {}
@@ -241,24 +280,24 @@ impl CPU {
             AddressMode::RHLI => {
                 self.fetch_data = self.cartridge.read(self.read_register(&self.instruction.register_2));
                 EMU::cycles(1);
-                self.set_register(RegisterType::HL, self.read_register(&RegisterType::HL) + 1)
+                self.set_register(&RegisterType::HL, self.read_register(&RegisterType::HL) + 1)
             }
             AddressMode::RHLD => {
                 self.fetch_data = self.cartridge.read(self.read_register(&self.instruction.register_2));
                 EMU::cycles(1);
-                self.set_register(RegisterType::HL, self.read_register(&RegisterType::HL) - 1)
+                self.set_register(&RegisterType::HL, self.read_register(&RegisterType::HL) - 1)
             }
             AddressMode::HLIR => {
                 self.fetch_data = self.read_register(&self.instruction.register_2);
                 self.mem_dest = self.read_register(&self.instruction.register_1);
                 self.dest_is_mem = true;
-                self.set_register(RegisterType::HL, self.read_register(&RegisterType::HL) + 1);
+                self.set_register(&RegisterType::HL, self.read_register(&RegisterType::HL) + 1);
             }
             AddressMode::HLDR => {
                 self.fetch_data = self.read_register(&self.instruction.register_2);
                 self.mem_dest = self.read_register(&self.instruction.register_1);
                 self.dest_is_mem = true;
-                self.set_register(RegisterType::HL, self.read_register(&RegisterType::HL) - 1);
+                self.set_register(&RegisterType::HL, self.read_register(&RegisterType::HL) - 1);
             }
             AddressMode::RA8 => {
                 self.fetch_data = self.cartridge.read(self.register.pc);
@@ -343,7 +382,7 @@ impl CPU {
         }
     }
 
-    fn set_register(&mut self, register_type: RegisterType, value: u16) {
+    fn set_register(&mut self, register_type: &RegisterType, value: u16) {
         match register_type {
             RegisterType::NONE => {}
             RegisterType::A => {self.register.a = value & 0xFF}
