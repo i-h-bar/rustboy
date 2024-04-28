@@ -22,8 +22,31 @@ impl Register {
         bit(self.f as u8, 7)
     }
 
+    fn n_flag(&self) -> bool {
+        bit(self.f as u8, 6)
+    }
+
+    fn h_flag(&self) -> bool {
+        bit(self.f as u8, 5)
+    }
+
     fn c_flag(&self) -> bool {
         bit(self.f as u8, 4)
+    }
+
+    fn set_flags(&mut self, z: i8, n: i8, h: i8, c: i8) {
+        if z != -1 {
+            self.f = bit_set(self.f as u8, 7, z) as u16
+        }
+        if n != -1 {
+            self.f = bit_set(self.f as u8, 6, n) as u16
+        }
+        if h != -1 {
+            self.f = bit_set(self.f as u8, 5, h) as u16
+        }
+        if c != -1 {
+            self.f = bit_set(self.f as u8, 4, c) as u16
+        }
     }
 }
 
@@ -37,6 +60,7 @@ pub struct CPU {
     instruction: &'static Instruction,
     halted: bool,
     stepping: bool,
+    master_interrupt: bool
 }
 
 impl CPU {
@@ -51,6 +75,7 @@ impl CPU {
             instruction: Instruction::from(0).unwrap(),
             halted: false,
             stepping: false,
+            master_interrupt: false
         }
     }
 
@@ -81,7 +106,15 @@ impl CPU {
             InstructionType::SUB => {}
             InstructionType::SBC => {}
             InstructionType::AND => {}
-            InstructionType::XOR => {}
+            InstructionType::XOR => {
+                self.register.a ^= self.fetch_data & 0xFF;
+                let set_z = if self.register.a == 0 {
+                    1
+                } else {
+                    0
+                };
+                self.register.set_flags(set_z, 0, 0, 0);
+            }
             InstructionType::OR => {}
             InstructionType::CP => {}
             InstructionType::POP => {}
@@ -98,7 +131,9 @@ impl CPU {
             InstructionType::RETI => {}
             InstructionType::LDH => {}
             InstructionType::JPHL => {}
-            InstructionType::DI => {}
+            InstructionType::DI => {
+                self.master_interrupt = false;
+            }
             InstructionType::EI => {}
             InstructionType::RST => {}
             InstructionType::ERR => {}
@@ -158,12 +193,31 @@ impl CPU {
         self.mem_dest = 0;
         self.dest_is_mem = false;
 
-        match &self.instruction.address_mode {
-            AddressMode::NONE => { return; }
-            AddressMode::IMP => { return; }
-            AddressMode::RD16 => {}
-            AddressMode::RR => {}
-            AddressMode::MRR => {}
+        match self.instruction.address_mode {
+            AddressMode::NONE => {}
+            AddressMode::IMP => {}
+            AddressMode::RD16 | AddressMode::D16 => {
+                let lo = self.cartridge.read(self.register.pc);
+                EMU::cycles(1);
+                let hi = self.cartridge.read(self.register.pc + 1);
+                EMU::cycles(1);
+                self.register.pc += 1;
+
+                self.fetch_data = lo | (hi << 8);
+            }
+            AddressMode::RR => {
+                self.fetch_data = self.read_register(&self.instruction.register_2)
+            }
+            AddressMode::MRR => {
+                self.fetch_data = self.read_register(&self.instruction.register_2);
+                self.mem_dest = self.read_register(&self.instruction.register_1);
+                self.dest_is_mem = true;
+
+                match self.instruction.register_1 {
+                    RegisterType::C => self.mem_dest |= 0xFF00,
+                    _ => {}
+                }
+            }
             AddressMode::R => {
                 self.fetch_data = self.read_register(&self.instruction.register_1)
             }
@@ -172,22 +226,26 @@ impl CPU {
                 EMU::cycles(1);
                 self.register.pc += 1;
             }
-            AddressMode::RMR => {}
-            AddressMode::RHLI => {}
+            AddressMode::RMR => {
+                let mut address = self.read_register(&self.instruction.register_2);
+                match self.instruction.register_1 {
+                    RegisterType::C => address |= 0xFF00,
+                    _ => {}
+                }
+                self.fetch_data = self.cartridge.read(address);
+                EMU::cycles(1);
+            }
+            AddressMode::RHLI => {
+                self.fetch_data = self.cartridge.read(self.read_register(&self.instruction.register_2));
+                EMU::cycles(1);
+                self.set_register(RegisterType::HL, self.read_register(&RegisterType::HL) + 1)
+            }
             AddressMode::RHLD => {}
             AddressMode::HLIR => {}
             AddressMode::HLDR => {}
             AddressMode::RA8 => {}
             AddressMode::A8R => {}
             AddressMode::HLSPR => {}
-            AddressMode::D16 => {
-                let lo = self.cartridge.read(self.register.pc);
-                EMU::cycles(1);
-                let hi = self.cartridge.read(self.register.pc + 1);
-                EMU::cycles(1);
-                self.fetch_data = lo | (hi << 8);
-                self.register.pc += 2;
-            }
             AddressMode::D8 => {}
             AddressMode::D16R => {}
             AddressMode::MRD8 => {}
@@ -217,8 +275,28 @@ impl CPU {
         }
     }
 
+    fn set_register(&mut self, register_type: RegisterType, value: u16) {
+        match register_type {
+            RegisterType::NONE => {}
+            RegisterType::A => {self.register.a = value & 0xFF}
+            RegisterType::F => {self.register.f = value & 0xFF}
+            RegisterType::B => {self.register.b = value & 0xFF}
+            RegisterType::C => {self.register.c = value & 0xFF}
+            RegisterType::D => {self.register.d = value & 0xFF}
+            RegisterType::E => {self.register.e = value & 0xFF}
+            RegisterType::H => {self.register.h = value & 0xFF}
+            RegisterType::L => {self.register.l = value & 0xFF}
+            RegisterType::AF => {self.register.a = reverse(value)}
+            RegisterType::BC => {self.register.b = reverse(value)}
+            RegisterType::DE => {self.register.d = reverse(value)}
+            RegisterType::HL => {self.register.h = reverse(value)}
+            RegisterType::SP => {self.register.sp = value}
+            RegisterType::PC => {self.register.pc = value}
+        }
+    }
+
     pub fn check_condition(&self) -> bool {
-        match &self.instruction.condition_type {
+        match self.instruction.condition_type {
             ConditionType::NONE => { true }
             ConditionType::NZ => { !self.register.z_flag() }
             ConditionType::Z => { self.register.z_flag() }
@@ -236,6 +314,14 @@ fn bit(a: u8, n: u8) -> bool {
     }
 }
 
+fn bit_set(a: u8, n: u8, on: i8) -> u8 {
+    if on != 0 {
+        a | (1 << n)
+    } else {
+        a & !(1 << n)
+    }
+}
+
 fn reverse(num: u16) -> u16 {
     ((num & 0xFF00) >> 8) | ((num & 0x00FF) << 8)
 }
@@ -249,5 +335,39 @@ mod tests {
     fn test_reverse() {
         assert_eq!(reverse(0x00EE), 0xEE00);
         assert_eq!(reverse(0xEE00), 0x00EE)
+    }
+
+    #[test]
+    fn test_set_and_read_flag() {
+        let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
+        assert!(!reg.z_flag());
+        reg.set_flags(1, 0, 0, 0);
+        assert!(reg.z_flag())
+    }
+
+    #[test]
+    fn test_not_set_and_read_flag() {
+        let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
+        assert!(!reg.n_flag());
+        reg.set_flags(-1, 0, 0, 0);
+        assert!(!reg.z_flag())
+    }
+
+    #[test]
+    fn test_not_set_and_read_flag_again() {
+        let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
+        assert!(!reg.n_flag());
+        reg.set_flags(0, 0, 0, 0);
+        assert!(!reg.z_flag())
+    }
+
+    #[test]
+    fn test_set_and_read_and_reset_flag() {
+        let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
+        assert!(!reg.z_flag());
+        reg.set_flags(1, 0, 0, 0);
+        assert!(reg.z_flag());
+        reg.set_flags(0, 0, 0, 0);
+        assert!(!reg.z_flag());
     }
 }

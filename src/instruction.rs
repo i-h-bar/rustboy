@@ -140,8 +140,7 @@ pub struct Instruction {
 
 impl Instruction {
     pub fn from(opcode: u8) -> Option<&'static Self> {
-        let instruction = INSTRUCTION_MAP.get(&opcode)?;
-        Some(instruction)
+        Some(INSTRUCTION_MAP.get(&opcode)?)
     }
 }
 

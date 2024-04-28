@@ -12,6 +12,6 @@ mod tpu;
 
 
 fn main() {
-    let mut emulation = EMU::from("test_roms/mem_timing.test");
+    let mut emulation = EMU::from("test_roms/dmg-acid2.test");
     emulation.run();
 }
