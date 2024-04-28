@@ -278,10 +278,45 @@ impl CPU {
                 EMU::cycles(1);
                 self.register.pc += 1;
             }
-            AddressMode::D16R | AddressMode::A16R => {}
-            AddressMode::MRD8 => {}
-            AddressMode::MR => {}
-            AddressMode::RA16 => {}
+            AddressMode::D16R | AddressMode::A16R => {
+                let lo = self.cartridge.read(self.register.pc);
+                EMU::cycles(1);
+
+                let hi = self.cartridge.read(self.register.pc + 1);
+                EMU::cycles(1);
+
+                self.mem_dest = lo | (hi << 8);
+                self.dest_is_mem = true;
+
+                self.register.pc += 2;
+                self.fetch_data = self.read_register(&self.instruction.register_2);
+            }
+            AddressMode::MRD8 => {
+                self.fetch_data = self.cartridge.read(self.register.pc);
+                EMU::cycles(1);
+                self.register.pc += 1;
+                self.mem_dest = self.read_register(&self.instruction.register_1);
+                self.dest_is_mem = true;
+            }
+            AddressMode::MR => {
+                self.mem_dest = self.read_register(&self.instruction.register_1);
+                self.dest_is_mem = true;
+                self.fetch_data = self.cartridge.read(self.read_register(&self.instruction.register_1));
+                EMU::cycles(1);
+            }
+            AddressMode::RA16 => {
+                let lo = self.cartridge.read(self.register.pc);
+                EMU::cycles(1);
+
+                let hi = self.cartridge.read(self.register.pc + 1);
+                EMU::cycles(1);
+
+                let address = lo | (hi << 8);
+
+                self.register.pc += 2;
+                self.fetch_data = self.cartridge.read(address);
+                EMU::cycles(1);
+            }
         }
     }
 
