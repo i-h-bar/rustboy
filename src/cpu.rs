@@ -98,31 +98,30 @@ impl CPU {
                             self.cartridge.write(self.mem_dest, self.fetch_data as u8);
                         }
                     }
-                    return
-                }
+                } else {
+                    match self.instruction.address_mode {
+                        AddressMode::HLSPR => {
+                            let h_flag = if ((self.read_register(&self.instruction.register_2) as u8 ) & 0x0F + (self.fetch_data as u8 & 0x0F)) >= 0x10 {
+                                1
+                            } else {
+                                0
+                            };
+                            let c_flag = if ((self.read_register(&self.instruction.register_2)) & 0xFF00 + (self.fetch_data & 0xFF00)) >= 0x100 {
+                                1
+                            } else {
+                                0
+                            };
 
-                match self.instruction.address_mode {
-                    AddressMode::HLSPR => {
-                        let h_flag = if ((self.read_register(&self.instruction.register_2) as u8 ) & 0x0F + (self.fetch_data as u8 & 0x0F)) >= 0x10 {
-                            1
-                        } else {
-                            0
-                        };
-                        let c_flag = if ((self.read_register(&self.instruction.register_2)) & 0xFF00 + (self.fetch_data & 0xFF00)) >= 0x100 {
-                            1
-                        } else {
-                            0
-                        };
+                            self.register.set_flags(0, 0, h_flag, c_flag);
 
-                        self.register.set_flags(0, 0, h_flag, c_flag);
-
-                        self.set_register(
-                            &self.instruction.register_1,
-                            self.read_register(&self.instruction.register_2) + self.fetch_data
-                        );
-                    }
-                    _ => {
-                        self.set_register(&self.instruction.register_1, self.fetch_data)
+                            self.set_register(
+                                &self.instruction.register_1,
+                                self.read_register(&self.instruction.register_2) + self.fetch_data
+                            );
+                        }
+                        _ => {
+                            self.set_register(&self.instruction.register_1, self.fetch_data)
+                        }
                     }
                 }
 
