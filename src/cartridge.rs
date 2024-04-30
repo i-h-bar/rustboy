@@ -401,31 +401,71 @@ impl Cartridge {
         }
     }
 
-    fn wram_read(&self, address: u16) -> u16 {
-        self.rom_data[address as usize] as u16
+    fn read(&self, address: u16) -> u8 {
+        self.rom_data[address as usize]
+    }
+
+    fn write(&mut self, address: u16, value: u8) {
+        self.rom_data[address as usize] = value;
+    }
+}
+
+
+struct RAM {
+    wram: Vec<u8>,
+    hram: Vec<u8>
+}
+
+impl RAM {
+    fn new() -> Self {
+        let wram = vec![0; 0x2000];
+        let hram = vec![0; 0x80];
+
+        Self { wram, hram }
+    }
+
+    fn wram_read(&self, address: u16) -> u8 {
+        let address = address - 0xC000;
+        self.wram[address as usize]
     }
 
     fn wram_write(&mut self, address: u16, value: u8) {
-        self.rom_data[address as usize] = value;
+        let address = address - 0xC000;
+        self.wram[address as usize] = value;
     }
 
-    fn hram_read(&self, address: u16) -> u16 {
-        self.rom_data[address as usize] as u16
+    fn hram_read(&self, address: u16) -> u8 {
+        let address = address - 0xFF80;
+        self.hram[address as usize]
     }
 
     fn hram_write(&mut self, address: u16, value: u8) {
-        self.rom_data[address as usize] = value;
+        let address = address - 0xFF80;
+        self.hram[address as usize] = value;
+    }
+}
+
+
+pub struct Bus {
+    cartridge: Cartridge,
+    ram: RAM
+}
+
+impl Bus {
+    pub fn from(cartridge: Cartridge) -> Self {
+        let ram = RAM::new();
+        Self { cartridge, ram }
     }
 
     pub fn read(&self, address: u16) -> u16 {
         if address < 0x8000 {
-            self.rom_data[address as usize] as u16
+            self.cartridge.read(address) as u16
         } else if address < 0xA000 {
             todo!()
         } else if address < 0xC000 {
-            self.rom_data[address as usize] as u16
+            self.cartridge.read(address) as u16
         } else if address < 0xE000 {
-            self.wram_read(address)
+            self.ram.wram_read(address) as u16
         } else if address < 0xFE00 {
             0
         } else if address < 0xFEA0 {
@@ -437,19 +477,19 @@ impl Cartridge {
         } else if address == 0xFFFF {
             todo!()
         } else {
-            self.hram_read(address)
+            self.ram.hram_read(address) as u16
         }
     }
 
     pub fn write(&mut self, address: u16, value: u8) {
         if address < 0x8000 {
-            self.rom_data[address as usize] = value;
+            self.cartridge.write(address, value)
         } else if address < 0xA000 {
             todo!()
         } else if address < 0xC000 {
-            self.rom_data[address as usize] = value;
+            self.cartridge.write(address, value)
         } else if address < 0xE000 {
-            self.wram_write(address, value)
+            self.ram.wram_write(address, value)
         } else if address < 0xFE00 {
             panic!("Cannot write to address: {:#05x} as it is in a reserved section", address)
         } else if address < 0xFEA0 {
@@ -461,7 +501,7 @@ impl Cartridge {
         } else if address == 0xFFFF {
             todo!()
         } else {
-            self.hram_write(address, value)
+            self.ram.hram_write(address, value)
         }
     }
 
@@ -480,6 +520,8 @@ impl Cartridge {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test_rom_size() {
         let data = [

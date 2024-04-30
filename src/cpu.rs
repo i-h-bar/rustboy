@@ -1,4 +1,4 @@
-use crate::cartridge::Cartridge;
+use crate::cartridge::Bus;
 use crate::emu::EMU;
 use crate::instruction::{AddressMode, ConditionType, Instruction, InstructionType, RegisterType};
 
@@ -52,7 +52,7 @@ impl Register {
 
 pub struct CPU {
     register: Register,
-    cartridge: Cartridge,
+    bus: Bus,
     fetch_data: u16,
     mem_dest: u16,
     dest_is_mem: bool,
@@ -64,10 +64,10 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn from(cartridge: Cartridge) -> Self {
+    pub fn from(bus: Bus) -> Self {
         Self {
             register: Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 },
-            cartridge,
+            bus,
             fetch_data: 0,
             mem_dest: 0,
             dest_is_mem: false,
@@ -92,10 +92,10 @@ impl CPU {
                     match self.instruction.register_2 {
                         RegisterType::AF | RegisterType::BC | RegisterType::DE | RegisterType::HL | RegisterType::PC | RegisterType::SP => {
                             EMU::cycles(1);
-                            self.cartridge.write16(self.mem_dest, self.fetch_data);
+                            self.bus.write16(self.mem_dest, self.fetch_data);
                         }
                         _ => {
-                            self.cartridge.write(self.mem_dest, self.fetch_data as u8);
+                            self.bus.write(self.mem_dest, self.fetch_data as u8);
                         }
                     }
                 } else {
@@ -216,7 +216,7 @@ impl CPU {
     }
 
     fn fetch_instruction(&mut self) {
-        self.current_op_code = self.cartridge.read(self.register.pc) as u8;
+        self.current_op_code = self.bus.read(self.register.pc) as u8;
         self.register.pc += 1;
         self.instruction = match Instruction::from(self.current_op_code) {
             None => {
@@ -235,9 +235,9 @@ impl CPU {
             AddressMode::NONE => {}
             AddressMode::IMP => {}
             AddressMode::RD16 | AddressMode::D16 => {
-                let lo = self.cartridge.read(self.register.pc);
+                let lo = self.bus.read(self.register.pc);
                 EMU::cycles(1);
-                let hi = self.cartridge.read(self.register.pc + 1);
+                let hi = self.bus.read(self.register.pc + 1);
                 EMU::cycles(1);
                 self.register.pc += 2;
 
@@ -260,7 +260,7 @@ impl CPU {
                 self.fetch_data = self.read_register(&self.instruction.register_1)
             }
             AddressMode::RD8 => {
-                self.fetch_data = self.cartridge.read(self.register.pc);
+                self.fetch_data = self.bus.read(self.register.pc);
                 EMU::cycles(1);
                 self.register.pc += 1;
             }
@@ -270,16 +270,16 @@ impl CPU {
                     RegisterType::C => address |= 0xFF00,
                     _ => {}
                 }
-                self.fetch_data = self.cartridge.read(address);
+                self.fetch_data = self.bus.read(address);
                 EMU::cycles(1);
             }
             AddressMode::RHLI => {
-                self.fetch_data = self.cartridge.read(self.read_register(&self.instruction.register_2));
+                self.fetch_data = self.bus.read(self.read_register(&self.instruction.register_2));
                 EMU::cycles(1);
                 self.set_register(&RegisterType::HL, self.read_register(&RegisterType::HL) + 1)
             }
             AddressMode::RHLD => {
-                self.fetch_data = self.cartridge.read(self.read_register(&self.instruction.register_2));
+                self.fetch_data = self.bus.read(self.read_register(&self.instruction.register_2));
                 EMU::cycles(1);
                 self.set_register(&RegisterType::HL, self.read_register(&RegisterType::HL) - 1)
             }
@@ -296,31 +296,31 @@ impl CPU {
                 self.set_register(&RegisterType::HL, self.read_register(&RegisterType::HL) - 1);
             }
             AddressMode::RA8 => {
-                self.fetch_data = self.cartridge.read(self.register.pc);
+                self.fetch_data = self.bus.read(self.register.pc);
                 EMU::cycles(1);
                 self.register.pc += 1;
             }
             AddressMode::A8R => {
-                self.mem_dest = self.cartridge.read(self.register.pc) | 0xFF00;
+                self.mem_dest = self.bus.read(self.register.pc) | 0xFF00;
                 self.dest_is_mem = true;
                 EMU::cycles(1);
                 self.register.pc += 1;
             }
             AddressMode::HLSPR => {
-                self.fetch_data = self.cartridge.read(self.register.pc);
+                self.fetch_data = self.bus.read(self.register.pc);
                 EMU::cycles(1);
                 self.register.pc += 1;
             }
             AddressMode::D8 => {
-                self.fetch_data = self.cartridge.read(self.register.pc);
+                self.fetch_data = self.bus.read(self.register.pc);
                 EMU::cycles(1);
                 self.register.pc += 1;
             }
             AddressMode::D16R | AddressMode::A16R => {
-                let lo = self.cartridge.read(self.register.pc);
+                let lo = self.bus.read(self.register.pc);
                 EMU::cycles(1);
 
-                let hi = self.cartridge.read(self.register.pc + 1);
+                let hi = self.bus.read(self.register.pc + 1);
                 EMU::cycles(1);
 
                 self.mem_dest = lo | (hi << 8);
@@ -330,7 +330,7 @@ impl CPU {
                 self.fetch_data = self.read_register(&self.instruction.register_2);
             }
             AddressMode::MRD8 => {
-                self.fetch_data = self.cartridge.read(self.register.pc);
+                self.fetch_data = self.bus.read(self.register.pc);
                 EMU::cycles(1);
                 self.register.pc += 1;
                 self.mem_dest = self.read_register(&self.instruction.register_1);
@@ -339,20 +339,20 @@ impl CPU {
             AddressMode::MR => {
                 self.mem_dest = self.read_register(&self.instruction.register_1);
                 self.dest_is_mem = true;
-                self.fetch_data = self.cartridge.read(self.read_register(&self.instruction.register_1));
+                self.fetch_data = self.bus.read(self.read_register(&self.instruction.register_1));
                 EMU::cycles(1);
             }
             AddressMode::RA16 => {
-                let lo = self.cartridge.read(self.register.pc);
+                let lo = self.bus.read(self.register.pc);
                 EMU::cycles(1);
 
-                let hi = self.cartridge.read(self.register.pc + 1);
+                let hi = self.bus.read(self.register.pc + 1);
                 EMU::cycles(1);
 
                 let address = lo | (hi << 8);
 
                 self.register.pc += 2;
-                self.fetch_data = self.cartridge.read(address);
+                self.fetch_data = self.bus.read(address);
                 EMU::cycles(1);
             }
         }

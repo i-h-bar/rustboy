@@ -1,4 +1,4 @@
-use crate::cartridge::Cartridge;
+use crate::cartridge::{Bus, Cartridge};
 use crate::cpu::CPU;
 use crate::ppu::PPU;
 use crate::tpu::Timer;
@@ -17,7 +17,8 @@ pub struct EMU {
 impl EMU {
     pub fn from(file: &str) -> Self {
         let cartridge = Cartridge::from(file);
-        let cpu = CPU::from(cartridge);
+        let bus = Bus::from(cartridge);
+        let cpu = CPU::from(bus);
         let ppu = PPU {};
         let timer = Timer {};
 
