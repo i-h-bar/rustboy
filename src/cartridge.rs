@@ -402,19 +402,19 @@ impl Cartridge {
     }
 
     fn wram_read(&self, address: u16) -> u16 {
-        todo!()
+        self.rom_data[address as usize] as u16
     }
 
-    fn wram_write(&self, address: u16, value: u8) {
-        todo!()
+    fn wram_write(&mut self, address: u16, value: u8) {
+        self.rom_data[address as usize] = value;
     }
 
     fn hram_read(&self, address: u16) -> u16 {
-        todo!()
+        self.rom_data[address as usize] as u16
     }
 
-    fn hram_write(&self, address: u16, value: u8) {
-        todo!()
+    fn hram_write(&mut self, address: u16, value: u8) {
+        self.rom_data[address as usize] = value;
     }
 
     pub fn read(&self, address: u16) -> u16 {
