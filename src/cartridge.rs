@@ -3,7 +3,6 @@ use std::fmt::{Display, Formatter};
 use std::fs;
 
 use lazy_static::lazy_static;
-use crate::instruction::AddressMode;
 
 lazy_static! {
     static ref LIC_MAP: HashMap<&'static str, &'static str> = [
@@ -402,19 +401,67 @@ impl Cartridge {
         }
     }
 
+    fn wram_read(&self, address: u16) -> u16 {
+        todo!()
+    }
+
+    fn wram_write(&self, address: u16, value: u8) {
+        todo!()
+    }
+
+    fn hram_read(&self, address: u16) -> u16 {
+        todo!()
+    }
+
+    fn hram_write(&self, address: u16, value: u8) {
+        todo!()
+    }
+
     pub fn read(&self, address: u16) -> u16 {
         if address < 0x8000 {
-            return self.rom_data[address as usize] as u16
-        } else {
+            self.rom_data[address as usize] as u16
+        } else if address < 0xA000 {
             todo!()
+        } else if address < 0xC000 {
+            self.rom_data[address as usize] as u16
+        } else if address < 0xE000 {
+            self.wram_read(address)
+        } else if address < 0xFE00 {
+            0
+        } else if address < 0xFEA0 {
+            todo!()
+        } else if address < 0xFF00 {
+            0
+        } else if address < 0xFF80 {
+            todo!()
+        } else if address == 0xFFFF {
+            todo!()
+        } else {
+            self.hram_read(address)
         }
     }
 
     pub fn write(&mut self, address: u16, value: u8) {
         if address < 0x8000 {
             self.rom_data[address as usize] = value;
-        } else {
+        } else if address < 0xA000 {
             todo!()
+        } else if address < 0xC000 {
+            self.rom_data[address as usize] = value;
+        } else if address < 0xE000 {
+            self.wram_write(address, value)
+        } else if address < 0xFE00 {
+            panic!("Cannot write to address: {:#05x} as it is in a reserved section", address)
+        } else if address < 0xFEA0 {
+            todo!()
+        } else if address < 0xFF00 {
+            panic!("Cannot write to address: {:#05x} as it is in a reserved section", address)
+        } else if address < 0xFF80 {
+            todo!()
+        } else if address == 0xFFFF {
+            todo!()
+        } else {
+            self.hram_write(address, value)
         }
     }
 
@@ -433,8 +480,6 @@ impl Cartridge {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_rom_size() {
         let data = [

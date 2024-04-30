@@ -242,7 +242,7 @@ impl CPU {
                 EMU::cycles(1);
                 let hi = self.cartridge.read(self.register.pc + 1);
                 EMU::cycles(1);
-                self.register.pc += 1;
+                self.register.pc += 2;
 
                 self.fetch_data = lo | (hi << 8);
             }
