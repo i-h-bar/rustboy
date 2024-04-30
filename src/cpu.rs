@@ -195,13 +195,21 @@ impl CPU {
             let a_before = self.register.a;
             let b_before = self.register.b;
             let c_before = self.register.c;
-            let f_before = self.register.f;
+            let d_before = self.register.d;
+            let e_before = self.register.e;
+            let h_before = self.register.h;
+            let l_before = self.register.l;
+            let sp_before = self.register.sp;
+            let z_flag_before = self.register.z_flag();
+            let n_flag_before = self.register.n_flag();
+            let h_flag_before = self.register.h_flag();
+            let c_flag_before = self.register.c_flag();
 
             self.fetch_instruction();
             self.fetch_data();
             self.execute();
             println!(
-                "{:#04x}: {: <4} | PC: {:#06x} -> {:#06x} | a: {:#04x} -> {:#04x}; b: {:#04x} -> {:#04x}; c: {:#04x} -> {:#04x} | {:#010b} -> {:#010b}",
+                "{:#04x}: {: <4} | PC: {:#06x} -> {:#06x} | a: {:#04x} -> {:#04x}; b: {:#04x} -> {:#04x}; c: {:#04x} -> {:#04x}  d: {:#04x} -> {:#04x}  e: {:#04x} -> {:#04x}  h: {:#04x} -> {:#04x}  l: {:#04x} -> {:#04x}  sp: {:#06x} -> {:#06x}| znhc: {}{}{}{} -> {}{}{}{}",
                 self.current_op_code,
                 self.instruction.instruction_type.to_string(),
                 pc_before,
@@ -212,8 +220,24 @@ impl CPU {
                 self.register.b,
                 c_before,
                 self.register.c,
-                f_before,
-                self.register.f
+                d_before,
+                self.register.d,
+                e_before,
+                self.register.e,
+                h_before,
+                self.register.h,
+                l_before,
+                self.register.l,
+                sp_before,
+                self.register.sp,
+                z_flag_before as u8,
+                n_flag_before as u8,
+                h_flag_before as u8,
+                c_flag_before as u8,
+                self.register.z_flag() as u8,
+                self.register.n_flag() as u8,
+                self.register.h_flag() as u8,
+                self.register.c_flag() as u8
             );
         }
     }
