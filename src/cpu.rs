@@ -195,7 +195,7 @@ impl CPU {
             self.fetch_data();
             self.execute();
             println!(
-                "{:#04x}: {: <4} | PC: {:#06x} | a: {:#04x}; b: {:#04x}; c: {:#04x} d: {:#04x} e: {:#04x} h: {:#06x} l: {:#06x} sp: {:#06x} | znhc: {}{}{}{}",
+                "{:#04x}: {: <4} | PC: {:#06x} | a: {:#04x}; b: {:#04x}; c: {:#04x} d: {:#04x} e: {:#04x} h: {:#06x} l: {:#06x} sp: {:#06x} hl: {:#06x} | znhc: {}{}{}{}",
                 self.current_op_code,
                 self.instruction.instruction_type.to_string(),
                 self.register.pc,
@@ -204,9 +204,10 @@ impl CPU {
                 self.register.c,
                 self.register.d,
                 self.register.e,
-                self.register.h,
+                self.read_register(&RegisterType::H),
                 self.register.l,
                 self.register.sp,
+                self.read_register(&RegisterType::HL),
                 self.register.z_flag() as u8,
                 self.register.n_flag() as u8,
                 self.register.h_flag() as u8,
@@ -359,6 +360,7 @@ impl CPU {
     }
 
     fn read_register(&self, register: &RegisterType) -> u16 {
+        // Im sus about these registers
         match register {
             RegisterType::NONE => 0,
             RegisterType::A => self.register.a,
@@ -379,6 +381,7 @@ impl CPU {
     }
 
     fn set_register(&mut self, register_type: &RegisterType, value: u16) {
+        // Sus about these too
         match register_type {
             RegisterType::NONE => {}
             RegisterType::A => {self.register.a = value & 0xFF}
