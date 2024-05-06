@@ -133,7 +133,10 @@ impl CPU {
             InstructionType::RRCA => {}
             InstructionType::STOP => {}
             InstructionType::RLA => {}
-            InstructionType::JR => {}
+            InstructionType::JR => {
+                let address = self.register.pc + (self.fetch_data & 0xFF);
+                self.go_to(address, false);
+            }
             InstructionType::RRA => {}
             InstructionType::DAA => {}
             InstructionType::CPL => {}

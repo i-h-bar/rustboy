@@ -25,25 +25,33 @@ lazy_static! {
 
             (0x15, Instruction{instruction_type: InstructionType::DEC,address_mode: AddressMode::R,register_1: RegisterType::D,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
             (0x16, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::R,register_1: RegisterType::D,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
+            
+            (0x18, Instruction{instruction_type:InstructionType::JR, address_mode: AddressMode::D8,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
 
             (0x1A, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RMR,register_1: RegisterType::A,register_2: RegisterType::DE,condition_type: ConditionType::NONE,param: 0,}),
             (0x1E, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD8,register_1: RegisterType::E,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
 
+            (0x20, Instruction{instruction_type: InstructionType::JR, address_mode: AddressMode::D8,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::NZ,param: 0}),
             (0x21, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD16,register_1: RegisterType::HL,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
             (0x22, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::HLIR,register_1: RegisterType::HL,register_2: RegisterType::A,condition_type: ConditionType::NONE,param: 0,}),
 
             (0x25, Instruction{instruction_type: InstructionType::DEC,address_mode: AddressMode::R,register_1: RegisterType::H,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
             (0x26, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD8,register_1: RegisterType::H,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
 
+            (0x28, Instruction{instruction_type: InstructionType::JR, address_mode: AddressMode::D8,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::Z,param: 0}),
+
             (0x2A, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RHLI,register_1: RegisterType::A,register_2: RegisterType::HL,condition_type: ConditionType::NONE,param: 0,}),
 
             (0x2E, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD8,register_1: RegisterType::L,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
 
+            (0x30, Instruction{instruction_type: InstructionType::JR, address_mode: AddressMode::D8,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::NC,param: 0}),
             (0x31, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD16,register_1: RegisterType::SP,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
             (0x32, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::HLDR,register_1: RegisterType::HL,register_2: RegisterType::A,condition_type: ConditionType::NONE,param: 0,}),
 
             (0x35, Instruction{instruction_type: InstructionType::DEC,address_mode: AddressMode::R,register_1: RegisterType::HL,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
             (0x36, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::MRD8,register_1: RegisterType::HL,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
+
+            (0x38, Instruction{instruction_type: InstructionType::JR, address_mode: AddressMode::D8,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::C,param: 0}),
 
             (0x3A, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RHLD,register_1: RegisterType::A,register_2: RegisterType::HL,condition_type: ConditionType::NONE,param: 0,}),
 
