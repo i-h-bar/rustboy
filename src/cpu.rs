@@ -165,7 +165,9 @@ impl CPU {
             InstructionType::PUSH => {}
             InstructionType::RET => {}
             InstructionType::CB => {}
-            InstructionType::CALL => {}
+            InstructionType::CALL => {
+                self.go_to(self.fetch_data, true);
+            }
             InstructionType::RETI => {}
             InstructionType::LDH => {
                 match self.instruction.register_1 {
@@ -408,13 +410,47 @@ impl CPU {
         }
     }
 
-    pub fn check_condition(&self) -> bool {
+    fn check_condition(&self) -> bool {
         match self.instruction.condition_type {
             ConditionType::NONE => { true }
             ConditionType::NZ => { !self.register.z_flag() }
             ConditionType::Z => { self.register.z_flag() }
             ConditionType::NC => { !self.register.c_flag() }
             ConditionType::C => { self.register.c_flag() }
+        }
+    }
+
+    fn stack_push(&mut self, data: u8) {
+        self.register.sp -= 1;
+        self.bus.write(self.register.sp, data);
+    }
+
+    fn stack_push16(&mut self, data: u16) {
+        self.stack_push(((data >> 8) & 0xFF) as u8);
+        self.stack_push((data & 0xFF) as u8);
+    }
+
+    fn stack_pop(&mut self) -> u16 {
+        self.register.sp += 1;
+        self.bus.read(self.register.sp)
+    }
+
+    fn stack_pop16(&mut self) -> u16 {
+        let lo: u16 = self.stack_pop();
+        let hi: u16 = self.stack_pop();
+
+        (hi << 8) | lo
+    }
+
+    fn go_to(&mut self, address: u16, push_pc: bool) {
+        if self.check_condition() {
+            if push_pc {
+                EMU::cycles(2);
+                self.stack_push16(self.register.pc)
+            }
+
+            self.register.pc = address;
+            EMU::cycles(1)
         }
     }
 }
