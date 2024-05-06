@@ -160,10 +160,7 @@ impl CPU {
             InstructionType::CP => {}
             InstructionType::POP => {}
             InstructionType::JUMP => {
-                if self.check_condition() {
-                    self.register.pc = self.fetch_data;
-                    EMU::cycles(1);
-                }
+                self.go_to(self.fetch_data, false);
             }
             InstructionType::PUSH => {}
             InstructionType::RET => {}
