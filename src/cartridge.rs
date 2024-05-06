@@ -448,13 +448,14 @@ impl RAM {
 
 pub struct Bus {
     cartridge: Cartridge,
-    ram: RAM
+    ram: RAM,
+    ie_register: u8
 }
 
 impl Bus {
     pub fn from(cartridge: Cartridge) -> Self {
         let ram = RAM::new();
-        Self { cartridge, ram }
+        Self { cartridge, ram, ie_register: 0 }
     }
 
     pub fn read(&self, address: u16) -> u16 {
@@ -475,7 +476,7 @@ impl Bus {
         } else if address < 0xFF80 {
             todo!()
         } else if address == 0xFFFF {
-            todo!()
+            self.ie_register as u16
         } else {
             self.ram.hram_read(address) as u16
         }
@@ -497,9 +498,9 @@ impl Bus {
         } else if address < 0xFF00 {
             panic!("Cannot write to address: {:#05x} as it is in a reserved section", address)
         } else if address < 0xFF80 {
-            todo!()
+            //todo!()
         } else if address == 0xFFFF {
-            todo!()
+            self.ie_register = value;
         } else {
             self.ram.hram_write(address, value)
         }

@@ -167,7 +167,18 @@ impl CPU {
             InstructionType::CB => {}
             InstructionType::CALL => {}
             InstructionType::RETI => {}
-            InstructionType::LDH => {}
+            InstructionType::LDH => {
+                match self.instruction.register_1 {
+                    RegisterType::A => {
+                        self.set_register(&self.instruction.register_1, self.bus.read(0xFF00 | self.fetch_data))
+                    },
+                    _ => {
+                        self.bus.write(0xFF00 | self.fetch_data, self.register.a as u8)
+                    }
+                }
+
+                EMU::cycles(1)
+            }
             InstructionType::JPHL => {}
             InstructionType::DI => {
                 self.master_interrupt = false;
@@ -195,17 +206,13 @@ impl CPU {
             self.fetch_data();
             self.execute();
             println!(
-                "{:#04x}: {: <4} | PC: {:#06x} | a: {:#04x}; b: {:#04x}; c: {:#04x} d: {:#04x} e: {:#04x} h: {:#06x} l: {:#06x} sp: {:#06x} hl: {:#06x} | znhc: {}{}{}{}",
+                "{:#04x}: {: <4} | PC: {:#06x} | a: {:#04x}; bc: {:#06x}; de: {:#06x}; sp: {:#06x}; hl: {:#06x} | znhc: {}{}{}{}",
                 self.current_op_code,
                 self.instruction.instruction_type.to_string(),
                 self.register.pc,
                 self.register.a,
-                self.register.b,
-                self.register.c,
-                self.register.d,
-                self.register.e,
-                self.read_register(&RegisterType::H),
-                self.register.l,
+                self.read_register(&RegisterType::BC),
+                self.read_register(&RegisterType::DE),
                 self.register.sp,
                 self.read_register(&RegisterType::HL),
                 self.register.z_flag() as u8,
