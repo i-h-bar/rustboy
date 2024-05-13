@@ -158,11 +158,33 @@ impl CPU {
             }
             InstructionType::OR => {}
             InstructionType::CP => {}
-            InstructionType::POP => {}
+            InstructionType::POP => {
+                let lo = self.stack_pop();
+                EMU::cycles(1);
+                let hi = self.stack_pop();
+                EMU::cycles(1);
+
+                let num = (hi << 8) | lo;
+
+                match self.instruction.register_1 {
+                    RegisterType::AF => { self.set_register(&self.instruction.register_1, num & 0xFFF0) },
+                    _ => { self.set_register(&self.instruction.register_1, num) }
+                }
+            }
             InstructionType::JUMP => {
                 self.go_to(self.fetch_data, false);
             }
-            InstructionType::PUSH => {}
+            InstructionType::PUSH => {
+                let hi = (self.read_register(&self.instruction.register_1) >> 8) & 0xFF;
+                EMU::cycles(1);
+                self.stack_push(hi as u8);
+
+                let lo = self.read_register(&self.instruction.register_1) & 0xFF;
+                EMU::cycles(1);
+                self.stack_push(lo as u8);
+
+                EMU::cycles(1);
+            }
             InstructionType::RET => {}
             InstructionType::CB => {}
             InstructionType::CALL => {
