@@ -60,7 +60,7 @@ pub struct CPU {
     instruction: &'static Instruction,
     halted: bool,
     stepping: bool,
-    master_interrupt: bool
+    master_enabled: bool
 }
 
 impl CPU {
@@ -75,7 +75,7 @@ impl CPU {
             instruction: Instruction::from(0).unwrap(),
             halted: false,
             stepping: false,
-            master_interrupt: false
+            master_enabled: false
         }
     }
 
@@ -134,7 +134,8 @@ impl CPU {
             InstructionType::STOP => {}
             InstructionType::RLA => {}
             InstructionType::JR => {
-                let address = self.register.pc + (self.fetch_data & 0xFF);
+                let rel = (self.fetch_data & 0xFF) as i16;
+                let address = (self.register.pc as i16 + rel) as u16;
                 self.go_to(address, false);
             }
             InstructionType::RRA => {}
@@ -185,12 +186,44 @@ impl CPU {
 
                 EMU::cycles(1);
             }
-            InstructionType::RET => {}
+            InstructionType::RET => {
+                match self.instruction.condition_type {
+                    ConditionType::NONE => {},
+                    _ => {EMU::cycles(1)}
+                }
+
+                if self.check_condition() {
+                    let lo = self.stack_pop();
+                    EMU::cycles(1);
+                    let hi = self.stack_pop();
+                    EMU::cycles(1);
+
+                    self.register.pc = (hi << 8) | lo;
+                    EMU::cycles(1)
+                }
+            }
             InstructionType::CB => {}
             InstructionType::CALL => {
                 self.go_to(self.fetch_data, true);
             }
-            InstructionType::RETI => {}
+            InstructionType::RETI => {
+                self.master_enabled = true;
+
+                match self.instruction.condition_type {
+                    ConditionType::NONE => {},
+                    _ => {EMU::cycles(1)}
+                }
+
+                if self.check_condition() {
+                    let lo = self.stack_pop();
+                    EMU::cycles(1);
+                    let hi = self.stack_pop();
+                    EMU::cycles(1);
+
+                    self.register.pc = (hi << 8) | lo;
+                    EMU::cycles(1)
+                }
+            }
             InstructionType::LDH => {
                 match self.instruction.register_1 {
                     RegisterType::A => {
@@ -205,10 +238,12 @@ impl CPU {
             }
             InstructionType::JPHL => {}
             InstructionType::DI => {
-                self.master_interrupt = false;
+                self.master_enabled = false;
             }
             InstructionType::EI => {}
-            InstructionType::RST => {}
+            InstructionType::RST => {
+                self.go_to(self.instruction.param, true);
+            }
             InstructionType::ERR => {}
             InstructionType::RLC => {}
             InstructionType::RRC => {}
@@ -453,8 +488,10 @@ impl CPU {
     }
 
     fn stack_pop(&mut self) -> u16 {
+        let data = self.bus.read(self.register.sp);
         self.register.sp += 1;
-        self.bus.read(self.register.sp)
+
+        data
     }
 
     fn stack_pop16(&mut self) -> u16 {

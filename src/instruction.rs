@@ -12,7 +12,7 @@ lazy_static! {
             (0x01, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD16,register_1: RegisterType::BC,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
             (0x02, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::MRR,register_1: RegisterType::BC,register_2: RegisterType::A,condition_type: ConditionType::NONE,param: 0,}),
             
-            (0x05, Instruction{instruction_type: InstructionType::DEC, address_mode: AddressMode::R, register_1: RegisterType::B, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
+            //(0x05, Instruction{instruction_type: InstructionType::DEC, address_mode: AddressMode::R, register_1: RegisterType::B, register_2: RegisterType::NONE, condition_type: ConditionType::NONE, param: 0}),
             (0x06, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD8,register_1: RegisterType::B,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
 
             (0x08, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::A16R,register_1: RegisterType::NONE,register_2: RegisterType::SP,condition_type: ConditionType::NONE,param: 0,}),
@@ -306,7 +306,7 @@ pub struct Instruction {
     pub register_1: RegisterType,
     pub register_2: RegisterType,
     pub condition_type: ConditionType,
-    pub param: u8,
+    pub param: u16,
 }
 
 impl Instruction {
