@@ -187,20 +187,7 @@ impl CPU {
                 EMU::cycles(1);
             }
             InstructionType::RET => {
-                match self.instruction.condition_type {
-                    ConditionType::NONE => {},
-                    _ => {EMU::cycles(1)}
-                }
-
-                if self.check_condition() {
-                    let lo = self.stack_pop();
-                    EMU::cycles(1);
-                    let hi = self.stack_pop();
-                    EMU::cycles(1);
-
-                    self.register.pc = (hi << 8) | lo;
-                    EMU::cycles(1)
-                }
+                self.return_from_procedure()
             }
             InstructionType::CB => {}
             InstructionType::CALL => {
@@ -208,21 +195,7 @@ impl CPU {
             }
             InstructionType::RETI => {
                 self.master_enabled = true;
-
-                match self.instruction.condition_type {
-                    ConditionType::NONE => {},
-                    _ => {EMU::cycles(1)}
-                }
-
-                if self.check_condition() {
-                    let lo = self.stack_pop();
-                    EMU::cycles(1);
-                    let hi = self.stack_pop();
-                    EMU::cycles(1);
-
-                    self.register.pc = (hi << 8) | lo;
-                    EMU::cycles(1)
-                }
+                self.return_from_procedure()
             }
             InstructionType::LDH => {
                 match self.instruction.register_1 {
@@ -509,6 +482,23 @@ impl CPU {
             }
 
             self.register.pc = address;
+            EMU::cycles(1)
+        }
+    }
+
+    fn return_from_procedure(&mut self) {
+        match self.instruction.condition_type {
+            ConditionType::NONE => {},
+            _ => {EMU::cycles(1)}
+        }
+
+        if self.check_condition() {
+            let lo = self.stack_pop();
+            EMU::cycles(1);
+            let hi = self.stack_pop();
+            EMU::cycles(1);
+
+            self.register.pc = (hi << 8) | lo;
             EMU::cycles(1)
         }
     }
