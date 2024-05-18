@@ -48,6 +48,13 @@ impl Register {
             self.f = bit_set(self.f as u8, 4, c) as u16
         }
     }
+
+    fn is_16bit(&self, reg_type: &RegisterType) -> bool{
+        match reg_type {
+            RegisterType::AF | RegisterType::BC | RegisterType::DE | RegisterType::HL | RegisterType::SP | RegisterType::PC => true,
+            _ => false
+        }
+    }
 }
 
 pub struct CPU {
@@ -126,8 +133,45 @@ impl CPU {
                 }
 
             }
-            InstructionType::INC => {}
-            InstructionType::DEC => {}
+            InstructionType::INC => {
+                if self.register.is_16bit(&self.instruction.register_1) {
+                    EMU::cycles(1);
+                }
+
+                if self.instruction.register_1 == RegisterType::HL && self.instruction.address_mode == AddressMode::MR {
+                    let val = (self.bus.read(self.read_register(&self.instruction.register_1)) + 1) & 0xFF;
+                    self.bus.write(self.read_register(&self.instruction.register_1), val as u8)
+                } else {
+                    let val = self.read_register(&self.instruction.register_1) + 1;
+                    self.set_register(&self.instruction.register_1, val)
+                }
+
+                if (self.current_op_code & 0x03) != 0x03 {
+                    let val = self.read_register(&self.instruction.register_1);
+                    self.register.set_flags((val == 0) as i8, 0, ((val & 0x0F) == 0) as i8, -1)
+                }
+
+            }
+            InstructionType::DEC => {
+                if self.register.is_16bit(&self.instruction.register_1) {
+                    EMU::cycles(1);
+                }
+
+                if self.instruction.register_1 == RegisterType::HL && self.instruction.address_mode == AddressMode::MR {
+                    let (val, _) = (self.bus.read(self.read_register(&self.instruction.register_1)) as u8).overflowing_sub(1);
+
+                    self.bus.write(self.read_register(&self.instruction.register_1), val)
+                } else {
+                    let (val, _) = (self.read_register(&self.instruction.register_1) as u8).overflowing_sub(1);
+
+                    self.set_register(&self.instruction.register_1, val as u16)
+                }
+
+                if (self.current_op_code & 0x0B) != 0x0B {
+                    let val = self.read_register(&self.instruction.register_1);
+                    self.register.set_flags((val == 0) as i8, 1, ((val & 0x0F) == 0x0F) as i8, -1)
+                }
+            }
             InstructionType::RLCA => {}
             InstructionType::ADD => {}
             InstructionType::RRCA => {}
@@ -489,7 +533,7 @@ impl CPU {
     fn return_from_procedure(&mut self) {
         match self.instruction.condition_type {
             ConditionType::NONE => {},
-            _ => {EMU::cycles(1)}
+            _ => EMU::cycles(1)
         }
 
         if self.check_condition() {

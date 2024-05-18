@@ -236,6 +236,8 @@ lazy_static! {
         .collect();
 }
 
+
+#[derive(PartialEq)]
 pub enum AddressMode {
     NONE,
     IMP,
@@ -261,6 +263,8 @@ pub enum AddressMode {
     RA16,
 }
 
+
+#[derive(PartialEq)]
 pub enum RegisterType {
     NONE,
     A,
