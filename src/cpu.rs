@@ -224,7 +224,19 @@ impl CPU {
             InstructionType::SCF => {}
             InstructionType::CCF => {}
             InstructionType::HALT => {}
-            InstructionType::ADC => {}
+            InstructionType::ADC => {
+                let u = self.fetch_data;
+                let a = self.register.a;
+                let c = self.register.c_flag() as u16;
+
+                self.register.a = (a.wrapping_add(u).wrapping_add(c)) & 0xFF;
+
+                self.register.set_flags(
+                    (self.register.a == 0) as i8,
+                    0,
+                    ((a & 0xF).wrapping_add(u & 0xF).wrapping_add(c) > 0xF) as i8,
+                    (a.wrapping_add(u).wrapping_add(c) > 0xFF) as i8);
+            }
             InstructionType::SUB => {
                 let val = self.read_register(&self.instruction.register_1).wrapping_sub(self.fetch_data);
 
