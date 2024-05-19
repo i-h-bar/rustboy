@@ -241,8 +241,8 @@ impl CPU {
                 let val = self.read_register(&self.instruction.register_1).wrapping_sub(self.fetch_data);
 
                 let z = (val == 0) as i8;
-                let h = ((self.read_register(&self.instruction.register_1) & 0xF).wrapping_sub(self.fetch_data & 0xF) < 0) as i8;
-                let c = (self.read_register(&self.instruction.register_1).wrapping_sub(self.fetch_data) < 0) as i8;
+                let h = (((self.read_register(&self.instruction.register_1) & 0xF) as i8).wrapping_sub((self.fetch_data & 0xF) as i8) < 0) as i8;
+                let c = ((self.read_register(&self.instruction.register_1) as i8).wrapping_sub(self.fetch_data as i8) < 0) as i8;
 
                 self.set_register(&self.instruction.register_1, val);
                 self.register.set_flags(z, 1, h, c);
@@ -251,8 +251,8 @@ impl CPU {
                 let val = self.fetch_data + self.register.c_flag() as u16;
 
                 let z = ((self.read_register(&self.instruction.register_1).wrapping_sub(val)) == 0) as i8;
-                let h = (((self.read_register(&self.instruction.register_1) & 0xF).wrapping_sub(self.fetch_data & 0xF).wrapping_sub(self.register.c_flag() as u16)) < 0) as i8;
-                let c = (self.read_register(&self.instruction.register_1).wrapping_sub(self.fetch_data).wrapping_sub(self.register.c_flag() as u16) < 0) as i8;
+                let h = ((((self.read_register(&self.instruction.register_1) & 0xF) as i8).wrapping_sub((self.fetch_data & 0xF) as i8).wrapping_sub(self.register.c_flag() as i8)) < 0) as i8;
+                let c = ((self.read_register(&self.instruction.register_1) as i8).wrapping_sub(self.fetch_data as i8).wrapping_sub(self.register.c_flag() as i8) < 0) as i8;
 
                 self.set_register(&self.instruction.register_1, self.read_register(&self.instruction.register_1).wrapping_sub(val));
                 self.register.set_flags(z, 1, h, c);
