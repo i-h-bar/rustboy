@@ -67,7 +67,8 @@ pub struct CPU {
     instruction: &'static Instruction,
     halted: bool,
     stepping: bool,
-    master_enabled: bool
+    master_enabled: bool,
+    cycle: u32
 }
 
 impl CPU {
@@ -82,7 +83,8 @@ impl CPU {
             instruction: Instruction::from(0).unwrap(),
             halted: false,
             stepping: false,
-            master_enabled: false
+            master_enabled: false,
+            cycle: 0
         }
     }
 
@@ -123,7 +125,7 @@ impl CPU {
 
                             self.set_register(
                                 &self.instruction.register_1,
-                                self.read_register(&self.instruction.register_2) + self.fetch_data
+                                (self.read_register(&self.instruction.register_2) as i8 + self.fetch_data as i8) as u16
                             );
                         }
                         _ => {
@@ -187,7 +189,7 @@ impl CPU {
                 }
 
                 if self.instruction.register_1 == RegisterType::SP {
-                    val = (self.read_register(&self.instruction.register_1) as u8).wrapping_add(self.fetch_data as u8) as u32;
+                    val = (self.read_register(&self.instruction.register_1) as i8).wrapping_add(self.fetch_data as i8) as u32;
                 } else {
                     val = self.read_register(&self.instruction.register_1) as u32 + self.fetch_data as u32;
                 }
@@ -214,8 +216,8 @@ impl CPU {
             InstructionType::STOP => {}
             InstructionType::RLA => {}
             InstructionType::JR => {
-                let rel = (self.fetch_data & 0xFF) as i16;
-                let address = (self.register.pc as i16 + rel) as u16;
+                let rel = (self.fetch_data & 0xFF) as i8;
+                let address = (self.register.pc as i16 + rel as i16) as u16;
                 self.go_to(address, false);
             }
             InstructionType::RRA => {}
@@ -235,14 +237,15 @@ impl CPU {
                     (self.register.a == 0) as i8,
                     0,
                     ((a & 0xF).wrapping_add(u & 0xF).wrapping_add(c) > 0xF) as i8,
-                    (a.wrapping_add(u).wrapping_add(c) > 0xFF) as i8);
+                    (a.wrapping_add(u).wrapping_add(c) > 0xFF) as i8
+                );
             }
             InstructionType::SUB => {
                 let val = self.read_register(&self.instruction.register_1).wrapping_sub(self.fetch_data);
 
                 let z = (val == 0) as i8;
-                let h = (((self.read_register(&self.instruction.register_1) & 0xF) as i8).wrapping_sub((self.fetch_data & 0xF) as i8) < 0) as i8;
-                let c = ((self.read_register(&self.instruction.register_1) as i8).wrapping_sub(self.fetch_data as i8) < 0) as i8;
+                let h = (((self.read_register(&self.instruction.register_1) & 0xF) as i32).wrapping_sub((self.fetch_data & 0xF) as i32) < 0) as i8;
+                let c = ((self.read_register(&self.instruction.register_1) as i32).wrapping_sub(self.fetch_data as i32) < 0) as i8;
 
                 self.set_register(&self.instruction.register_1, val);
                 self.register.set_flags(z, 1, h, c);
@@ -251,8 +254,8 @@ impl CPU {
                 let val = self.fetch_data + self.register.c_flag() as u16;
 
                 let z = ((self.read_register(&self.instruction.register_1).wrapping_sub(val)) == 0) as i8;
-                let h = ((((self.read_register(&self.instruction.register_1) & 0xF) as i8).wrapping_sub((self.fetch_data & 0xF) as i8).wrapping_sub(self.register.c_flag() as i8)) < 0) as i8;
-                let c = ((self.read_register(&self.instruction.register_1) as i8).wrapping_sub(self.fetch_data as i8).wrapping_sub(self.register.c_flag() as i8) < 0) as i8;
+                let h = ((((self.read_register(&self.instruction.register_1) & 0xF) as i32).wrapping_sub((self.fetch_data & 0xF) as i32).wrapping_sub(self.register.c_flag() as i32)) < 0) as i8;
+                let c = ((self.read_register(&self.instruction.register_1) as i32).wrapping_sub(self.fetch_data as i32).wrapping_sub(self.register.c_flag() as i32) < 0) as i8;
 
                 self.set_register(&self.instruction.register_1, self.read_register(&self.instruction.register_1).wrapping_sub(val));
                 self.register.set_flags(z, 1, h, c);
@@ -313,7 +316,7 @@ impl CPU {
                         self.set_register(&self.instruction.register_1, self.bus.read(0xFF00 | self.fetch_data))
                     },
                     _ => {
-                        self.bus.write(0xFF00 | self.fetch_data, self.register.a as u8)
+                        self.bus.write(self.mem_dest, self.register.a as u8)
                     }
                 }
 
@@ -347,8 +350,34 @@ impl CPU {
             self.fetch_instruction();
             self.fetch_data();
             self.execute();
+            let z: &str;
+            let n: &str;
+            let h: &str;
+            let c: &str;
+            if self.register.z_flag() {
+                z = "Z";
+            } else {
+                z = "-";
+            }
+            if self.register.n_flag() {
+                n = "N";
+            } else {
+                n = "-";
+            }
+            if self.register.h_flag() {
+                h = "H";
+            } else {
+                h = "-";
+            }
+            if self.register.c_flag() {
+                c = "C";
+            } else {
+                c = "-";
+            }
+
             println!(
-                "{:#04x}: {: <4} | PC: {:#06x} | a: {:#04x}; bc: {:#06x}; de: {:#06x}; sp: {:#06x}; hl: {:#06x} | znhc: {}{}{}{}",
+                "{:#08x}: {:#04x} {: <4} | PC: {:#06x} | a: {:#04x}; bc: {:#06x}; de: {:#06x}; sp: {:#06x}; hl: {:#06x} | {}{}{}{}",
+                self.cycle,
                 self.current_op_code,
                 self.instruction.instruction_type.to_string(),
                 self.register.pc,
@@ -357,11 +386,13 @@ impl CPU {
                 self.read_register(&RegisterType::DE),
                 self.register.sp,
                 self.read_register(&RegisterType::HL),
-                self.register.z_flag() as u8,
-                self.register.n_flag() as u8,
-                self.register.h_flag() as u8,
-                self.register.c_flag() as u8
+                z,
+                n,
+                h,
+                c
             );
+
+            self.cycle += 1;
         }
     }
 
@@ -607,7 +638,6 @@ impl CPU {
             EMU::cycles(1);
             let hi = self.stack_pop();
             EMU::cycles(1);
-
             self.register.pc = (hi << 8) | lo;
             EMU::cycles(1)
         }
