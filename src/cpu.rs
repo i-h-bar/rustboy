@@ -532,7 +532,6 @@ impl CPU {
     }
 
     fn read_register(&self, register: &RegisterType) -> u16 {
-        // Im sus about these registers
         match register {
             RegisterType::NONE => 0,
             RegisterType::A => self.register.a,
@@ -553,7 +552,6 @@ impl CPU {
     }
 
     fn set_register(&mut self, register_type: &RegisterType, value: u16) {
-        // Sus about these too
         match register_type {
             RegisterType::NONE => {}
             RegisterType::A => {self.register.a = value & 0xFF}
