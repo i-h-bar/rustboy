@@ -98,42 +98,25 @@ impl CPU {
             InstructionType::NOP => {}
             InstructionType::LD => {
                 if self.dest_is_mem {
-                    match self.instruction.register_2 {
-                        RegisterType::AF | RegisterType::BC | RegisterType::DE | RegisterType::HL | RegisterType::PC | RegisterType::SP => {
-                            EMU::cycles(1);
-                            self.bus.write16(self.mem_dest, self.fetch_data);
-                        }
-                        _ => {
-                            self.bus.write(self.mem_dest, self.fetch_data as u8);
-                        }
+                    if self.register.is_16bit(&self.instruction.register_2) {
+                        EMU::cycles(1);
+                        self.bus.write16(self.mem_dest, self.fetch_data);
+                    } else {
+                        self.bus.write(self.mem_dest, self.fetch_data as u8);
                     }
                 } else {
-                    match self.instruction.address_mode {
-                        AddressMode::HLSPR => {
-                            let h_flag = if ((self.read_register(&self.instruction.register_2) as u8 ) & 0x0F + (self.fetch_data as u8 & 0x0F)) >= 0x10 {
-                                1
-                            } else {
-                                0
-                            };
-                            let c_flag = if ((self.read_register(&self.instruction.register_2)) & 0xFF00 + (self.fetch_data & 0xFF00)) >= 0x100 {
-                                1
-                            } else {
-                                0
-                            };
-
-                            self.register.set_flags(0, 0, h_flag, c_flag);
-
-                            self.set_register(
-                                &self.instruction.register_1,
-                                (self.read_register(&self.instruction.register_2) as i8 + self.fetch_data as i8) as u16
-                            );
-                        }
-                        _ => {
-                            self.set_register(&self.instruction.register_1, self.fetch_data)
-                        }
+                    if self.instruction.address_mode == AddressMode::HLSPR {
+                        let h = (((self.read_register(&self.instruction.register_2) as u8 ) & 0x0F + (self.fetch_data as u8 & 0x0F)) >= 0x10) as i8;
+                        let c = (((self.read_register(&self.instruction.register_2)) & 0xFF00 + (self.fetch_data & 0xFF00)) >= 0x100) as i8;
+                        self.register.set_flags(0, 0, h, c);
+                        self.set_register(
+                            &self.instruction.register_1,
+                            (self.read_register(&self.instruction.register_2) as i8 + self.fetch_data as i8) as u16
+                        );
+                    } else {
+                        self.set_register(&self.instruction.register_1, self.fetch_data)
                     }
                 }
-
             }
             InstructionType::INC => {
                 if self.register.is_16bit(&self.instruction.register_1) {
