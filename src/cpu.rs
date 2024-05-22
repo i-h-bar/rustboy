@@ -34,19 +34,20 @@ impl Register {
         bit(self.f as u8, 4)
     }
 
-    fn set_flags(&mut self, z: i8, n: i8, h: i8, c: i8) {
-        if z != -1 {
-            self.f = bit_set(self.f as u8, 7, z) as u16
-        }
-        if n != -1 {
-            self.f = bit_set(self.f as u8, 6, n) as u16
-        }
-        if h != -1 {
-            self.f = bit_set(self.f as u8, 5, h) as u16
-        }
-        if c != -1 {
-            self.f = bit_set(self.f as u8, 4, c) as u16
-        }
+    fn set_z(&mut self, on: bool) {
+        self.f = bit_set(self.f as u8, 7, on) as u16;
+    }
+
+    fn set_n(&mut self, on: bool) {
+        self.f = bit_set(self.f as u8, 6, on) as u16;
+    }
+
+    fn set_h(&mut self, on: bool) {
+        self.f = bit_set(self.f as u8, 5, on) as u16;
+    }
+
+    fn set_c(&mut self, on: bool) {
+        self.f = bit_set(self.f as u8, 4, on) as u16;
     }
 
     fn is_16bit(&self, reg_type: &RegisterType) -> bool{
@@ -106,9 +107,11 @@ impl CPU {
                     }
                 } else {
                     if self.instruction.address_mode == AddressMode::HLSPR {
-                        let h = (((self.read_register(&self.instruction.register_2) as u8 ) & 0x0F + (self.fetch_data as u8 & 0x0F)) >= 0x10) as i8;
-                        let c = (((self.read_register(&self.instruction.register_2)) & 0xFF00 + (self.fetch_data & 0xFF00)) >= 0x100) as i8;
-                        self.register.set_flags(0, 0, h, c);
+                        self.register.set_h(((self.read_register(&self.instruction.register_2) as u8 ) & 0x0F + (self.fetch_data as u8 & 0x0F)) >= 0x10);
+                        self.register.set_c(((self.read_register(&self.instruction.register_2)) & 0xFF00 + (self.fetch_data & 0xFF00)) >= 0x100);
+                        self.register.set_z(false);
+                        self.register.set_n(false);
+
                         self.set_register(
                             &self.instruction.register_1,
                             (self.read_register(&self.instruction.register_2) as i8 + self.fetch_data as i8) as u16
@@ -135,7 +138,9 @@ impl CPU {
 
                 if (self.current_op_code & 0x03) != 0x03 {
                     let val = self.read_register(&self.instruction.register_1);
-                    self.register.set_flags((val == 0) as i8, 0, ((val & 0x0F) == 0) as i8, -1)
+                    self.register.set_z(val == 0);
+                    self.register.set_n(false);
+                    self.register.set_h((val & 0x0F) == 0);
                 }
 
             }
@@ -156,15 +161,17 @@ impl CPU {
 
                 if (self.current_op_code & 0x0B) != 0x0B {
                     let val = self.read_register(&self.instruction.register_1);
-                    self.register.set_flags((val == 0) as i8, 1, ((val & 0x0F) == 0x0F) as i8, -1)
+                    self.register.set_z(val == 0);
+                    self.register.set_n(true);
+                    self.register.set_h((val & 0x0F) == 0x0F);
                 }
             }
             InstructionType::RLCA => {}
             InstructionType::ADD => {
                 let val: u32;
-                let z: i8;
-                let h: i8;
-                let c: i8;
+                let z: bool;
+                let h: bool;
+                let c: bool;
                 let is_16bit = self.register.is_16bit(&self.instruction.register_1);
 
                 if is_16bit {
@@ -178,22 +185,23 @@ impl CPU {
                 }
 
                 if self.instruction.register_1 == RegisterType::SP {
-                    z = 0;
-                    h = ((self.read_register(&self.instruction.register_1) & 0xF).wrapping_add(self.fetch_data & 0xF) >= 0x10) as i8;
-                    c = ((self.read_register(&self.instruction.register_1) & 0xFF).wrapping_add(self.fetch_data & 0xFF) > 0x100) as i8;
+                    self.register.set_n(true);
+                    self.register.set_z(false);
+                    self.register.set_h((self.read_register(&self.instruction.register_1) & 0xF).wrapping_add(self.fetch_data & 0xF) >= 0x10);
+                    self.register.set_c((self.read_register(&self.instruction.register_1) & 0xFF).wrapping_add(self.fetch_data & 0xFF) > 0x100);
                 } else if is_16bit {
-                    z = -1;
-                    h = ((self.read_register(&self.instruction.register_1) & 0xFFF).wrapping_add(self.fetch_data & 0xFFF) >= 0x1000) as i8;
+                    self.register.set_n(true);
+                    self.register.set_h((self.read_register(&self.instruction.register_1) & 0xFFF).wrapping_add(self.fetch_data & 0xFFF) >= 0x1000);
                     let n = (self.read_register(&self.instruction.register_1) as u32).wrapping_add(self.fetch_data as u32);
-                    c = (n >= 0x10000) as i8;
+                    self.register.set_c(n >= 0x10000);
                 } else {
-                    z = ((val & 0xFF) == 0) as i8;
-                    h = ((self.read_register(&self.instruction.register_1) & 0xF).wrapping_add(self.fetch_data & 0xF) >= 0x10) as i8;
-                    c = ((self.read_register(&self.instruction.register_1) & 0xFF).wrapping_add(self.fetch_data & 0xFF) >= 0x100) as i8;
+                    self.register.set_n(true);
+                    self.register.set_z((val & 0xFF) == 0);
+                    self.register.set_h((self.read_register(&self.instruction.register_1) & 0xF).wrapping_add(self.fetch_data & 0xF) >= 0x10);
+                    self.register.set_c((self.read_register(&self.instruction.register_1) & 0xFF).wrapping_add(self.fetch_data & 0xFF) >= 0x100);
                 }
 
                 self.set_register(&self.instruction.register_1, (val & 0xFFFF) as u16);
-                self.register.set_flags(z, 0, h, c);
             }
             InstructionType::RRCA => {}
             InstructionType::STOP => {}
@@ -216,42 +224,43 @@ impl CPU {
 
                 self.register.a = (a.wrapping_add(u).wrapping_add(c)) & 0xFF;
 
-                self.register.set_flags(
-                    (self.register.a == 0) as i8,
-                    0,
-                    ((a & 0xF).wrapping_add(u & 0xF).wrapping_add(c) > 0xF) as i8,
-                    (a.wrapping_add(u).wrapping_add(c) > 0xFF) as i8
-                );
+                self.register.set_z(self.register.a == 0);
+                self.register.set_n(true);
+                self.register.set_h((a & 0xF).wrapping_add(u & 0xF).wrapping_add(c) > 0xF);
+                self.register.set_c(a.wrapping_add(u).wrapping_add(c) > 0xFF);
             }
             InstructionType::SUB => {
                 let val = self.read_register(&self.instruction.register_1).wrapping_sub(self.fetch_data);
-
-                let z = (val == 0) as i8;
-                let h = (((self.read_register(&self.instruction.register_1) & 0xF) as i32).wrapping_sub((self.fetch_data & 0xF) as i32) < 0) as i8;
-                let c = ((self.read_register(&self.instruction.register_1) as i32).wrapping_sub(self.fetch_data as i32) < 0) as i8;
+                let z = val == 0;
+                let h = ((self.read_register(&self.instruction.register_1) & 0xF) as i32).wrapping_sub((self.fetch_data & 0xF) as i32) < 0;
+                let c = (self.read_register(&self.instruction.register_1) as i32).wrapping_sub(self.fetch_data as i32) < 0;
 
                 self.set_register(&self.instruction.register_1, val);
-                self.register.set_flags(z, 1, h, c);
+                self.register.set_z(z);
+                self.register.set_h(h);
+                self.register.set_c(c);
+                self.register.set_n(true);
             }
             InstructionType::SBC => {
                 let val = self.fetch_data + self.register.c_flag() as u16;
 
-                let z = ((self.read_register(&self.instruction.register_1).wrapping_sub(val)) == 0) as i8;
-                let h = ((((self.read_register(&self.instruction.register_1) & 0xF) as i32).wrapping_sub((self.fetch_data & 0xF) as i32).wrapping_sub(self.register.c_flag() as i32)) < 0) as i8;
-                let c = ((self.read_register(&self.instruction.register_1) as i32).wrapping_sub(self.fetch_data as i32).wrapping_sub(self.register.c_flag() as i32) < 0) as i8;
+                let z = (self.read_register(&self.instruction.register_1).wrapping_sub(val)) == 0;
+                let h = (((self.read_register(&self.instruction.register_1) & 0xF) as i32).wrapping_sub((self.fetch_data & 0xF) as i32).wrapping_sub(self.register.c_flag() as i32)) < 0;
+                let c = (self.read_register(&self.instruction.register_1) as i32).wrapping_sub(self.fetch_data as i32).wrapping_sub(self.register.c_flag() as i32) < 0;
 
                 self.set_register(&self.instruction.register_1, self.read_register(&self.instruction.register_1).wrapping_sub(val));
-                self.register.set_flags(z, 1, h, c);
+                self.register.set_z(z);
+                self.register.set_h(h);
+                self.register.set_c(c);
+                self.register.set_n(true);
             }
             InstructionType::AND => {}
             InstructionType::XOR => {
                 self.register.a ^= self.fetch_data & 0xFF;
-                let set_z = if self.register.a == 0 {
-                    1
-                } else {
-                    0
-                };
-                self.register.set_flags(set_z, 0, 0, 0);
+                self.register.set_z(self.register.a == 0);
+                self.register.set_h(false);
+                self.register.set_c(false);
+                self.register.set_n(false);
             }
             InstructionType::OR => {}
             InstructionType::CP => {}
@@ -635,8 +644,8 @@ fn bit(a: u8, n: u8) -> bool {
     }
 }
 
-fn bit_set(a: u8, n: u8, on: i8) -> u8 {
-    if on != 0 {
+fn bit_set(a: u8, n: u8, on: bool) -> u8 {
+    if on {
         a | (1 << n)
     } else {
         a & !(1 << n)
