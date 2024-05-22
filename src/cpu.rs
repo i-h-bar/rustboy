@@ -671,35 +671,17 @@ mod tests {
     fn test_set_and_read_flag() {
         let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
         assert!(!reg.z_flag());
-        reg.set_flags(1, 0, 0, 0);
+        reg.set_z(true);
         assert!(reg.z_flag())
-    }
-
-    #[test]
-    fn test_not_set_and_read_flag() {
-        let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
-        assert!(!reg.n_flag());
-        reg.set_flags(-1, 0, 0, 0);
-        assert!(!reg.z_flag())
-    }
-
-    #[test]
-    fn test_not_set_and_read_flag_again() {
-        let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
-        assert!(!reg.n_flag());
-        reg.set_flags(0, 0, 0, 0);
-        assert!(!reg.z_flag())
     }
 
     #[test]
     fn test_set_and_read_and_reset_z_flag() {
         let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
         assert!(!reg.z_flag());
-        reg.set_flags(1, 0, 0, 0);
+        reg.set_z(true);
         assert!(reg.z_flag());
-        reg.set_flags(-1, 0, 0, 0);
-        assert!(reg.z_flag());
-        reg.set_flags(0, 0, 0, 0);
+        reg.set_z(false);
         assert!(!reg.z_flag());
     }
 
@@ -707,11 +689,9 @@ mod tests {
     fn test_set_and_read_and_reset_n_flag() {
         let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
         assert!(!reg.n_flag());
-        reg.set_flags(0, 1, 0, 0);
+        reg.set_n(true);
         assert!(reg.n_flag());
-        reg.set_flags(0, -1, 0, 0);
-        assert!(reg.n_flag());
-        reg.set_flags(0, 0, 0, 0);
+        reg.set_n(false);
         assert!(!reg.n_flag());
     }
 
@@ -719,11 +699,9 @@ mod tests {
     fn test_set_and_read_and_reset_h_flag() {
         let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
         assert!(!reg.h_flag());
-        reg.set_flags(0, 0, 1, 0);
+        reg.set_h(true);
         assert!(reg.h_flag());
-        reg.set_flags(0, 0, -1, 0);
-        assert!(reg.h_flag());
-        reg.set_flags(0, 0, 0, 0);
+        reg.set_h(false);
         assert!(!reg.h_flag());
     }
 
@@ -731,11 +709,9 @@ mod tests {
     fn test_set_and_read_and_reset_c_flag() {
         let mut reg = Register { a: 0x1, f: 0, b: 0, c: 0, d: 0, e: 0, h: 0, l: 0, sp: 0, pc: 0x100 };
         assert!(!reg.c_flag());
-        reg.set_flags(0, 0, 0, 1);
+        reg.set_c(true);
         assert!(reg.c_flag());
-        reg.set_flags(0, 0, 0, -1);
-        assert!(reg.c_flag());
-        reg.set_flags(0, 0, 0, 0);
+        reg.set_c(false);
         assert!(!reg.c_flag());
     }
 }
