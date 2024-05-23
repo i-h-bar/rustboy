@@ -50,7 +50,7 @@ impl Register {
         self.f = bit_set(self.f as u8, 4, on) as u16;
     }
 
-    fn is_16bit(&self, reg_type: &RegisterType) -> bool{
+    fn is_16bit(&self, reg_type: &RegisterType) -> bool {
         match reg_type {
             RegisterType::AF | RegisterType::BC | RegisterType::DE | RegisterType::HL | RegisterType::SP | RegisterType::PC => true,
             _ => false
@@ -169,9 +169,6 @@ impl CPU {
             InstructionType::RLCA => {}
             InstructionType::ADD => {
                 let val: u32;
-                let z: bool;
-                let h: bool;
-                let c: bool;
                 let is_16bit = self.register.is_16bit(&self.instruction.register_1);
 
                 if is_16bit {
