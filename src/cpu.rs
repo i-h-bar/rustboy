@@ -251,16 +251,34 @@ impl CPU {
                 self.register.set_c(c);
                 self.register.set_n(true);
             }
-            InstructionType::AND => {}
+            InstructionType::AND => {
+                self.register.a &= self.fetch_data;
+                self.register.set_z(self.register.a == 0);
+                self.register.set_n(false);
+                self.register.set_h(true);
+                self.register.set_c(false);
+            }
             InstructionType::XOR => {
                 self.register.a ^= self.fetch_data & 0xFF;
                 self.register.set_z(self.register.a == 0);
+                self.register.set_n(false);
                 self.register.set_h(false);
                 self.register.set_c(false);
-                self.register.set_n(false);
             }
-            InstructionType::OR => {}
-            InstructionType::CP => {}
+            InstructionType::OR => {
+                self.register.a |= self.fetch_data & 0xFF;
+                self.register.set_z(self.register.a == 0);
+                self.register.set_n(false);
+                self.register.set_h(false);
+                self.register.set_c(false);
+            }
+            InstructionType::CP => {
+                let n = self.register.a as i32 - self.fetch_data as i32;
+                self.register.set_z(n == 0);
+                self.register.set_n(true);
+                self.register.set_h((self.register.a as i32 & 0x0F) - (self.fetch_data as i32 & 0x0F) < 0);
+                self.register.set_c(n < 0);
+            }
             InstructionType::POP => {
                 let lo = self.stack_pop();
                 EMU::cycles(1);
@@ -291,7 +309,9 @@ impl CPU {
             InstructionType::RET => {
                 self.return_from_procedure()
             }
-            InstructionType::CB => {}
+            InstructionType::CB => {
+                
+            }
             InstructionType::CALL => {
                 self.go_to(self.fetch_data, true);
             }
