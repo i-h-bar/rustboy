@@ -326,17 +326,17 @@ impl CPU {
                         self.register.set_z((reg_val & (1 << bit)) != 0);
                         self.register.set_n(false);
                         self.register.set_h(true);
-                        return
+                        return;
                     }
                     2 => {
                         reg_val &= !(1 << bit);
                         self.set_register8(&reg, reg_val);
-                        return
+                        return;
                     }
                     3 => {
                         reg_val |= 1 << bit;
                         self.set_register8(&reg, reg_val);
-                        return
+                        return;
                     }
                     _ => {}
                 }
@@ -358,7 +358,7 @@ impl CPU {
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c(set_c);
-                        return
+                        return;
                     }
 
                     1 => {
@@ -371,7 +371,7 @@ impl CPU {
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((old & 1) != 0);
-                        return
+                        return;
                     }
 
                     2 => {
@@ -390,7 +390,7 @@ impl CPU {
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((old & 0x80) != 0);
-                        return
+                        return;
                     }
 
                     3 => {
@@ -408,7 +408,7 @@ impl CPU {
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((old & 1) != 0);
-                        return
+                        return;
                     }
 
                     4 => {
@@ -419,7 +419,7 @@ impl CPU {
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((old & 0x80) != 0);
-                        return
+                        return;
                     }
 
                     5 => {
@@ -429,7 +429,7 @@ impl CPU {
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((reg_val & 1) != 0);
-                        return
+                        return;
                     }
                     6 => {
                         reg_val = ((reg_val & 0xF0) >> 4) | ((reg_val & 0xF) << 4);
@@ -438,7 +438,7 @@ impl CPU {
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c(false);
-                        return
+                        return;
                     }
 
                     7 => {
@@ -448,10 +448,10 @@ impl CPU {
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((reg_val & 1) != 0);
-                        return
+                        return;
                     }
 
-                    _ => {panic!("ERROR: INVALID CB: {:#04x}", op)}
+                    _ => { panic!("ERROR: INVALID CB: {:#04x}", op) }
                 }
             }
             InstructionType::CALL => {
