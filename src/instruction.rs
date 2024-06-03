@@ -281,11 +281,11 @@ const REGS: [RegisterType; 8] = [
 ];
 
 
-pub fn reg_lookup(index: u8) -> RegisterType {
+pub fn reg_lookup(index: u8) -> &'static RegisterType {
     if index > 0b111 {
-        RegisterType::NONE
+        &RegisterType::NONE
     } else {
-        REGS[index]
+        REGS.get(index as usize).expect(&format!("indedx to grab from reg_lookup should never be greater than 7 but was {}", index))
     }
 }
 
@@ -317,7 +317,7 @@ pub enum AddressMode {
 }
 
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum RegisterType {
     NONE,
     A,

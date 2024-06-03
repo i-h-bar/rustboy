@@ -317,7 +317,7 @@ impl CPU {
 
                 EMU::cycles(1);
 
-                if reg == RegisterType::HL {
+                if reg == &RegisterType::HL {
                     EMU::cycles(2);
                 }
 
@@ -721,7 +721,7 @@ impl CPU {
             RegisterType::H => self.register.h as u8,
             RegisterType::L => self.register.l as u8,
             RegisterType::HL => self.bus.read(self.read_register(register)) as u8,
-            _ => panic!("{} is not a valid 8bit register", register)
+            _ => panic!("{:?} is not a valid 8bit register", register)
         }
     }
 
@@ -736,7 +736,7 @@ impl CPU {
             RegisterType::H => { self.register.h = (value & 0xFF) as u16 }
             RegisterType::L => { self.register.l = (value & 0xFF) as u16 }
             RegisterType::HL => { self.bus.write(self.read_register(register), value) }
-            _ => panic!("{} is not a valid 8bit register", register)
+            _ => panic!("{:?} is not a valid 8bit register", register)
         }
     }
 
