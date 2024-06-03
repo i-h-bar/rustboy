@@ -269,6 +269,26 @@ lazy_static! {
         .collect();
 }
 
+const REGS: [RegisterType; 8] = [
+    RegisterType::B,
+    RegisterType::C,
+    RegisterType::D,
+    RegisterType::E,
+    RegisterType::H,
+    RegisterType::L,
+    RegisterType::HL,
+    RegisterType::A
+];
+
+
+pub fn reg_lookup(index: u8) -> RegisterType {
+    if index > 0b111 {
+        RegisterType::NONE
+    } else {
+        REGS[index]
+    }
+}
+
 
 #[derive(PartialEq)]
 pub enum AddressMode {

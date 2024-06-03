@@ -1,7 +1,7 @@
 use crate::cartridge::Bus;
 use crate::emu::EMU;
+use crate::instruction;
 use crate::instruction::{AddressMode, ConditionType, Instruction, InstructionType, RegisterType};
-
 
 #[derive(Debug)]
 pub struct Register {
@@ -69,7 +69,7 @@ pub struct CPU {
     halted: bool,
     stepping: bool,
     master_enabled: bool,
-    cycle: u32
+    cycle: u32,
 }
 
 impl CPU {
@@ -85,7 +85,7 @@ impl CPU {
             halted: false,
             stepping: false,
             master_enabled: false,
-            cycle: 0
+            cycle: 0,
         }
     }
 
@@ -107,14 +107,14 @@ impl CPU {
                     }
                 } else {
                     if self.instruction.address_mode == AddressMode::HLSPR {
-                        self.register.set_h(((self.read_register(&self.instruction.register_2) as u8 ) & 0x0F + (self.fetch_data as u8 & 0x0F)) >= 0x10);
+                        self.register.set_h(((self.read_register(&self.instruction.register_2) as u8) & 0x0F + (self.fetch_data as u8 & 0x0F)) >= 0x10);
                         self.register.set_c(((self.read_register(&self.instruction.register_2)) & 0xFF00 + (self.fetch_data & 0xFF00)) >= 0x100);
                         self.register.set_z(false);
                         self.register.set_n(false);
 
                         self.set_register(
                             &self.instruction.register_1,
-                            (self.read_register(&self.instruction.register_2) as i8 + self.fetch_data as i8) as u16
+                            (self.read_register(&self.instruction.register_2) as i8 + self.fetch_data as i8) as u16,
                         );
                     } else {
                         self.set_register(&self.instruction.register_1, self.fetch_data)
@@ -132,7 +132,7 @@ impl CPU {
 
                     self.bus.write(self.read_register(&self.instruction.register_1), val)
                 } else {
-                    let val= (self.read_register(&self.instruction.register_1) as u8).wrapping_add(1);
+                    let val = (self.read_register(&self.instruction.register_1) as u8).wrapping_add(1);
                     self.set_register(&self.instruction.register_1, val as u16)
                 }
 
@@ -142,7 +142,6 @@ impl CPU {
                     self.register.set_n(false);
                     self.register.set_h((val & 0x0F) == 0);
                 }
-
             }
             InstructionType::DEC => {
                 if self.register.is_16bit(&self.instruction.register_1) {
@@ -288,7 +287,7 @@ impl CPU {
                 let num = (hi << 8) | lo;
 
                 match self.instruction.register_1 {
-                    RegisterType::AF => { self.set_register(&self.instruction.register_1, num & 0xFFF0) },
+                    RegisterType::AF => { self.set_register(&self.instruction.register_1, num & 0xFFF0) }
                     _ => { self.set_register(&self.instruction.register_1, num) }
                 }
             }
@@ -310,7 +309,150 @@ impl CPU {
                 self.return_from_procedure()
             }
             InstructionType::CB => {
-                
+                let op = self.fetch_data as u8;
+                let reg = instruction::reg_lookup(op & 0b111);
+                let bit = (op >> 3) & 0b111;
+                let bit_op = (op >> 6) & 0b11;
+                let mut reg_val = self.read_register8(&reg);
+
+                EMU::cycles(1);
+
+                if reg == RegisterType::HL {
+                    EMU::cycles(2);
+                }
+
+                match bit_op {
+                    1 => {
+                        self.register.set_z((reg_val & (1 << bit)) != 0);
+                        self.register.set_n(false);
+                        self.register.set_h(true);
+                        return
+                    }
+                    2 => {
+                        reg_val &= !(1 << bit);
+                        self.set_register8(&reg, reg_val);
+                        return
+                    }
+                    3 => {
+                        reg_val |= 1 << bit;
+                        self.set_register8(&reg, reg_val);
+                        return
+                    }
+                    _ => {}
+                }
+
+                match bit {
+                    0 => {
+                        let mut result = (reg_val << 1) & 0xFF;
+                        let set_c: bool;
+
+                        if (reg_val & (1 << 7)) != 0 {
+                            result |= 1;
+                            set_c = true;
+                        } else {
+                            set_c = false;
+                        }
+
+                        self.set_register8(&reg, result);
+                        self.register.set_z(result == 0);
+                        self.register.set_n(false);
+                        self.register.set_h(false);
+                        self.register.set_c(set_c);
+                        return
+                    }
+
+                    1 => {
+                        let old = reg_val.clone();
+                        reg_val >>= 1;
+                        reg_val |= old << 7;
+
+                        self.set_register8(&reg, reg_val);
+                        self.register.set_z(reg_val == 0);
+                        self.register.set_n(false);
+                        self.register.set_h(false);
+                        self.register.set_c((old & 1) != 0);
+                        return
+                    }
+
+                    2 => {
+                        let old = reg_val.clone();
+                        reg_val <<= 1;
+
+                        let c_flag_num = if self.register.c_flag() {
+                            1
+                        } else {
+                            0
+                        };
+
+                        reg_val |= c_flag_num;
+                        self.set_register8(&reg, reg_val);
+                        self.register.set_z(reg_val == 0);
+                        self.register.set_n(false);
+                        self.register.set_h(false);
+                        self.register.set_c((old & 0x80) != 0);
+                        return
+                    }
+
+                    3 => {
+                        let old = reg_val.clone();
+                        reg_val >>= 1;
+                        let c_flag_num = if self.register.c_flag() {
+                            1
+                        } else {
+                            0
+                        };
+
+                        reg_val |= c_flag_num << 7;
+                        self.set_register8(&reg, reg_val);
+                        self.register.set_z(reg_val == 0);
+                        self.register.set_n(false);
+                        self.register.set_h(false);
+                        self.register.set_c((old & 1) != 0);
+                        return
+                    }
+
+                    4 => {
+                        let old = reg_val.clone();
+                        reg_val <<= 1;
+                        self.set_register8(&reg, reg_val);
+                        self.register.set_z(reg_val == 0);
+                        self.register.set_n(false);
+                        self.register.set_h(false);
+                        self.register.set_c((old & 0x80) != 0);
+                        return
+                    }
+
+                    5 => {
+                        let u = reg_val >> 1;
+                        self.set_register8(&reg, u);
+                        self.register.set_z(u != 0);
+                        self.register.set_n(false);
+                        self.register.set_h(false);
+                        self.register.set_c((reg_val & 1) != 0);
+                        return
+                    }
+                    6 => {
+                        reg_val = ((reg_val & 0xF0) >> 4) | ((reg_val & 0xF) << 4);
+                        self.set_register8(&reg, reg_val);
+                        self.register.set_z(reg_val == 0);
+                        self.register.set_n(false);
+                        self.register.set_h(false);
+                        self.register.set_c(false);
+                        return
+                    }
+
+                    7 => {
+                        let u = reg_val >> 1;
+                        self.set_register8(&reg, u);
+                        self.register.set_z(u != 0);
+                        self.register.set_n(false);
+                        self.register.set_h(false);
+                        self.register.set_c((reg_val & 1) != 0);
+                        return
+                    }
+
+                    _ => {panic!("ERROR: INVALID CB: {:#04x}", op)}
+                }
             }
             InstructionType::CALL => {
                 self.go_to(self.fetch_data, true);
@@ -323,7 +465,7 @@ impl CPU {
                 match self.instruction.register_1 {
                     RegisterType::A => {
                         self.set_register(&self.instruction.register_1, self.bus.read(0xFF00 | self.fetch_data))
-                    },
+                    }
                     _ => {
                         self.bus.write(self.mem_dest, self.register.a as u8)
                     }
@@ -568,23 +710,53 @@ impl CPU {
         }
     }
 
+    fn read_register8(&self, register: &RegisterType) -> u8 {
+        match register {
+            RegisterType::A => self.register.a as u8,
+            RegisterType::F => self.register.f as u8,
+            RegisterType::B => self.register.b as u8,
+            RegisterType::C => self.register.c as u8,
+            RegisterType::D => self.register.d as u8,
+            RegisterType::E => self.register.e as u8,
+            RegisterType::H => self.register.h as u8,
+            RegisterType::L => self.register.l as u8,
+            RegisterType::HL => self.bus.read(self.read_register(register)) as u8,
+            _ => panic!("{} is not a valid 8bit register", register)
+        }
+    }
+
+    fn set_register8(&mut self, register: &RegisterType, value: u8) {
+        match register {
+            RegisterType::A => { self.register.a = (value & 0xFF) as u16 }
+            RegisterType::F => { self.register.f = (value & 0xFF) as u16 }
+            RegisterType::B => { self.register.b = (value & 0xFF) as u16 }
+            RegisterType::C => { self.register.c = (value & 0xFF) as u16 }
+            RegisterType::D => { self.register.d = (value & 0xFF) as u16 }
+            RegisterType::E => { self.register.e = (value & 0xFF) as u16 }
+            RegisterType::H => { self.register.h = (value & 0xFF) as u16 }
+            RegisterType::L => { self.register.l = (value & 0xFF) as u16 }
+            RegisterType::HL => { self.bus.write(self.read_register(register), value) }
+            _ => panic!("{} is not a valid 8bit register", register)
+        }
+    }
+
     fn set_register(&mut self, register_type: &RegisterType, value: u16) {
         match register_type {
             RegisterType::NONE => {}
-            RegisterType::A => {self.register.a = value & 0xFF}
-            RegisterType::F => {self.register.f = value & 0xFF}
-            RegisterType::B => {self.register.b = value & 0xFF}
-            RegisterType::C => {self.register.c = value & 0xFF}
-            RegisterType::D => {self.register.d = value & 0xFF}
-            RegisterType::E => {self.register.e = value & 0xFF}
-            RegisterType::H => {self.register.h = value & 0xFF}
-            RegisterType::L => {self.register.l = value & 0xFF}
-            RegisterType::AF => {self.register.a = reverse(value)}
-            RegisterType::BC => {self.register.b = reverse(value)}
-            RegisterType::DE => {self.register.d = reverse(value)}
-            RegisterType::HL => {self.register.h = reverse(value)}
-            RegisterType::SP => {self.register.sp = value}
-            RegisterType::PC => {self.register.pc = value}
+            RegisterType::A => { self.register.a = value & 0xFF }
+            RegisterType::F => { self.register.f = value & 0xFF }
+            RegisterType::B => { self.register.b = value & 0xFF }
+            RegisterType::C => { self.register.c = value & 0xFF }
+            RegisterType::D => { self.register.d = value & 0xFF }
+            RegisterType::E => { self.register.e = value & 0xFF }
+            RegisterType::H => { self.register.h = value & 0xFF }
+            RegisterType::L => { self.register.l = value & 0xFF }
+            RegisterType::AF => { self.register.a = reverse(value) }
+            RegisterType::BC => { self.register.b = reverse(value) }
+            RegisterType::DE => { self.register.d = reverse(value) }
+            RegisterType::HL => { self.register.h = reverse(value) }
+            RegisterType::SP => { self.register.sp = value }
+            RegisterType::PC => { self.register.pc = value }
         }
     }
 
@@ -636,7 +808,7 @@ impl CPU {
 
     fn return_from_procedure(&mut self) {
         match self.instruction.condition_type {
-            ConditionType::NONE => {},
+            ConditionType::NONE => {}
             _ => EMU::cycles(1)
         }
 
