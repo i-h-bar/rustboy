@@ -275,7 +275,7 @@ impl CPU {
                 let n = self.register.a as i32 - self.fetch_data as i32;
                 self.register.set_z(n == 0);
                 self.register.set_n(true);
-                self.register.set_h((self.register.a as i32 & 0x0F) - (self.fetch_data as i32 & 0x0F) < 0);
+                self.register.set_h(((self.register.a as i32 & 0x0F) - (self.fetch_data as i32 & 0x0F)) < 0);
                 self.register.set_c(n < 0);
             }
             InstructionType::POP => {
@@ -425,7 +425,7 @@ impl CPU {
                     5 => {
                         let u = reg_val >> 1;
                         self.set_register8(&reg, u);
-                        self.register.set_z(u != 0);
+                        self.register.set_z(u == 0);
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((reg_val & 1) != 0);
@@ -444,7 +444,7 @@ impl CPU {
                     7 => {
                         let u = reg_val >> 1;
                         self.set_register8(&reg, u);
-                        self.register.set_z(u != 0);
+                        self.register.set_z(u == 0);
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((reg_val & 1) != 0);

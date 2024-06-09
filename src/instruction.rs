@@ -285,7 +285,7 @@ pub fn reg_lookup(index: u8) -> &'static RegisterType {
     if index > 0b111 {
         &RegisterType::NONE
     } else {
-        REGS.get(index as usize).expect(&format!("indedx to grab from reg_lookup should never be greater than 7 but was {}", index))
+        REGS.get(index as usize).expect(&format!("index to grab from reg_lookup should never be greater than 7 but was {}", index))
     }
 }
 
