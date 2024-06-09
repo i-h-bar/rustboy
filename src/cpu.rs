@@ -565,11 +565,12 @@ impl CPU {
             }
 
             println!(
-                "{:#08x}: {:#04x} {: <4} | PC: {:#06x} | a: {:#04x}; bc: {:#06x}; de: {:#06x}; sp: {:#06x}; hl: {:#06x} | {}{}{}{}",
+                "{:#08x}: {:#04x} {: <4} | PC: {:#06x} | DATA {:#06x} | a: {:#04x}; bc: {:#06x}; de: {:#06x}; sp: {:#06x}; hl: {:#06x} | {}{}{}{}",
                 self.cycle,
                 self.current_op_code,
                 self.instruction.instruction_type.to_string(),
                 self.register.pc,
+                self.fetch_data,
                 self.register.a,
                 self.read_register(&RegisterType::BC),
                 self.read_register(&RegisterType::DE),
@@ -809,7 +810,7 @@ impl CPU {
     }
 
     fn stack_push(&mut self, data: u8) {
-        self.register.sp -= 1;
+        self.register.sp = self.register.sp.wrapping_sub(1);
         self.bus.write(self.register.sp, data);
     }
 
