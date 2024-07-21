@@ -2,6 +2,8 @@ use crate::cartridge::Bus;
 use crate::emu::EMU;
 use crate::instruction;
 use crate::instruction::{AddressMode, ConditionType, Instruction, InstructionType, RegisterType};
+use crate::interrupts;
+use crate::interrupts::Interrupt;
 
 #[derive(Debug)]
 pub struct Register {
@@ -69,6 +71,9 @@ pub struct CPU {
     halted: bool,
     stepping: bool,
     master_enabled: bool,
+    enabling_ime: bool,
+    int_flags: u8,
+    ie_register: u8,
     cycle: u32,
 }
 
@@ -85,6 +90,9 @@ impl CPU {
             halted: false,
             stepping: false,
             master_enabled: false,
+            enabling_ime: false,
+            int_flags: 0,
+            ie_register: 0,
             cycle: 0,
         }
     }
@@ -246,11 +254,46 @@ impl CPU {
                 self.register.set_h(false);
                 self.register.set_c(new_c != 0);
             }
-            InstructionType::DAA => {}
-            InstructionType::CPL => {}
-            InstructionType::SCF => {}
-            InstructionType::CCF => {}
-            InstructionType::HALT => {}
+            InstructionType::DAA => {
+                let mut u: u16 = 0;
+                let mut cf: u8 = 0;
+
+                if self.register.h_flag() || (!self.register.n_flag() && self.register.a & 0xF > 9) {
+                    u = 6;
+                }
+
+                if  self.register.c_flag() || (!self.register.n_flag() && self.register.a > 0x99) {
+                    u |= 0x60;
+                    cf = 1;
+                }
+
+                if self.register.n_flag() {
+                    self.register.a.wrapping_sub(u);
+                } else {
+                    self.register.a.wrapping_add(u);
+                }
+                self.register.set_z(self.register.a == 0);
+                self.register.set_h(false);
+                self.register.set_c(cf != 0);
+            }
+            InstructionType::CPL => {
+                self.register.a = !(self.register.a as u8) as u16;
+                self.register.set_n(true);
+                self.register.set_h(true);
+            }
+            InstructionType::SCF => {
+                self.register.set_n(false);
+                self.register.set_h(false);
+                self.register.set_c(true);
+            }
+            InstructionType::CCF => {
+                self.register.set_n(false);
+                self.register.set_h(false);
+                self.register.set_c(self.register.c_flag() ^ true);
+            }
+            InstructionType::HALT => {
+                self.halted = true;
+            }
             InstructionType::ADC => {
                 let u = self.fetch_data;
                 let a = self.register.a;
@@ -515,7 +558,9 @@ impl CPU {
             InstructionType::DI => {
                 self.master_enabled = false;
             }
-            InstructionType::EI => {}
+            InstructionType::EI => {
+                self.enabling_ime = true;
+            }
             InstructionType::RST => {
                 self.go_to(self.instruction.param, true);
             }
@@ -583,7 +628,57 @@ impl CPU {
             );
 
             self.cycle += 1;
+        } else {
+            EMU::cycles(1);
+
+            if self.int_flags != 0 {
+                self.halted = false;
+            }
         }
+
+        if self.master_enabled {
+            self.handle_interrupts();
+            self.enabling_ime = false;
+        }
+
+        if self.enabling_ime {
+            self.master_enabled = true;
+        }
+    }
+
+    fn handle_interrupts(&mut self) {
+        if self.interrupt_check(0x40, Interrupt::VBlank) {
+
+        } else if self.interrupt_check(0x48, Interrupt::LCDStat) {
+
+        } else if self.interrupt_check(0x50, Interrupt::Timer) {
+
+        } else if self.interrupt_check(0x58, Interrupt::Serial) {
+
+        } else if self.interrupt_check(0x60, Interrupt::JoyPad) {
+
+        }
+     }
+
+
+    fn interrupt_check(&mut self, address: u16, interrupt: Interrupt) -> bool {
+        let int_num = interrupts::fetch_interrupt_num(interrupt);
+
+        if self.int_flags & int_num != 0 && self.ie_register & int_num != 0 {
+            self.handle_interrupt(address);
+            self.int_flags &= !int_num;
+            self.halted = false;
+            self.master_enabled = false;
+
+            true
+        } else {
+            false
+        }
+    }
+
+    fn handle_interrupt(&mut self, address: u16) {
+        self.stack_push16(self.register.pc);
+        self.register.pc = address;
     }
 
     fn fetch_instruction(&mut self) {
