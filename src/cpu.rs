@@ -166,11 +166,10 @@ impl CPU {
                 }
             }
             InstructionType::RLCA => {
-                let u: u8 = self.register.a as u8;
+                let u = self.register.a as u8;
                 let c = (u >> 7) & 1;
-                let u = (u << 1) & c;
-                self.register.a = u as u16;
 
+                self.register.a = ((u << 1) | c) as u16;
                 self.register.set_z(false);
                 self.register.set_n(false);
                 self.register.set_h(false);
@@ -210,24 +209,22 @@ impl CPU {
                 self.set_register(&self.instruction.register_1, (val & 0xFFFF) as u16);
             }
             InstructionType::RRCA => {
-                let b = self.register.a & 1;
+                let b = (self.register.a & 1) as u8;
                 self.register.a >>= 1;
-                self.register.a |= b << 7;
-
+                self.register.a |= (b << 7) as u16;
                 self.register.set_z(false);
                 self.register.set_n(false);
                 self.register.set_h(false);
                 self.register.set_c(b != 0);
             }
             InstructionType::STOP => {
-                panic!("Stop instruction called")
+                panic!("Stopping!")
             }
             InstructionType::RLA => {
-                let u: u8 = self.register.a as u8;
+                let u = self.register.a as u8;
                 let c = (u >> 7) & 1;
-                let u = (u << 1) & if self.register.c_flag() {1} else {0};
-                self.register.a = u as u16;
 
+                self.register.a = ((u << 1) | if self.register.c_flag() { 1 } else { 0 }) as u16;
                 self.register.set_z(false);
                 self.register.set_n(false);
                 self.register.set_h(false);
@@ -239,14 +236,15 @@ impl CPU {
                 self.go_to(address, false);
             }
             InstructionType::RRA => {
-                let b = self.register.a & 1;
+                let new_c = (self.register.a & 1) as u8;
+
                 self.register.a >>= 1;
-                self.register.a |= if self.register.c_flag() {1} else {0} << 7;
+                self.register.a |= (if self.register.c_flag() { 1 } else { 0 } << 7) as u16;
 
                 self.register.set_z(false);
                 self.register.set_n(false);
                 self.register.set_h(false);
-                self.register.set_c(b != 0);
+                self.register.set_c(new_c != 0);
             }
             InstructionType::DAA => {}
             InstructionType::CPL => {}
@@ -315,7 +313,7 @@ impl CPU {
                 let n = self.register.a as i32 - self.fetch_data as i32;
                 self.register.set_z(n == 0);
                 self.register.set_n(true);
-                self.register.set_h((self.register.a as i32 & 0x0F) - (self.fetch_data as i32 & 0x0F) < 0);
+                self.register.set_h(((self.register.a as i32 & 0x0F) - (self.fetch_data as i32 & 0x0F)) < 0);
                 self.register.set_c(n < 0);
             }
             InstructionType::POP => {
@@ -465,7 +463,7 @@ impl CPU {
                     5 => {
                         let u = reg_val >> 1;
                         self.set_register8(&reg, u);
-                        self.register.set_z(u != 0);
+                        self.register.set_z(u == 0);
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((reg_val & 1) != 0);
@@ -484,7 +482,7 @@ impl CPU {
                     7 => {
                         let u = reg_val >> 1;
                         self.set_register8(&reg, u);
-                        self.register.set_z(u != 0);
+                        self.register.set_z(u == 0);
                         self.register.set_n(false);
                         self.register.set_h(false);
                         self.register.set_c((reg_val & 1) != 0);
@@ -567,11 +565,12 @@ impl CPU {
             }
 
             println!(
-                "{:#08x}: {:#04x} {: <4} | PC: {:#06x} | a: {:#04x}; bc: {:#06x}; de: {:#06x}; sp: {:#06x}; hl: {:#06x} | {}{}{}{}",
+                "{:#08x}: {:#04x} {: <4} | PC: {:#06x} | DATA {:#06x} | a: {:#04x}; bc: {:#06x}; de: {:#06x}; sp: {:#06x}; hl: {:#06x} | {}{}{}{}",
                 self.cycle,
                 self.current_op_code,
                 self.instruction.instruction_type.to_string(),
                 self.register.pc,
+                self.fetch_data,
                 self.register.a,
                 self.read_register(&RegisterType::BC),
                 self.read_register(&RegisterType::DE),
@@ -811,7 +810,7 @@ impl CPU {
     }
 
     fn stack_push(&mut self, data: u8) {
-        self.register.sp -= 1;
+        self.register.sp = self.register.sp.wrapping_sub(1);
         self.bus.write(self.register.sp, data);
     }
 

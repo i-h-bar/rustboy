@@ -47,7 +47,7 @@ lazy_static! {
             (0x0C, Instruction{instruction_type: InstructionType::INC, address_mode: AddressMode::R, register_1: RegisterType::H,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x25, Instruction{instruction_type: InstructionType::DEC,address_mode: AddressMode::R,register_1: RegisterType::H,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
             (0x26, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD8,register_1: RegisterType::H,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
-
+            (0x27, Instruction{instruction_type:InstructionType::DAA,address_mode: AddressMode::NONE,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x28, Instruction{instruction_type: InstructionType::JR, address_mode: AddressMode::D8,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::Z,param: 0}),
             (0x29, Instruction{instruction_type: InstructionType::ADD, address_mode: AddressMode::RR, register_1: RegisterType::HL, register_2: RegisterType::HL,condition_type: ConditionType::NONE,param: 0}),
             (0x2A, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RHLI,register_1: RegisterType::A,register_2: RegisterType::HL,condition_type: ConditionType::NONE,param: 0,}),
@@ -55,7 +55,7 @@ lazy_static! {
             (0x2C, Instruction{instruction_type: InstructionType::INC, address_mode: AddressMode::R, register_1: RegisterType::L,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x2D, Instruction{instruction_type: InstructionType::DEC, address_mode: AddressMode::R, register_1: RegisterType::L,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x2E, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD8,register_1: RegisterType::L,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
-
+            (0x2F, Instruction{instruction_type:InstructionType::CPL,address_mode: AddressMode::NONE,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x30, Instruction{instruction_type: InstructionType::JR, address_mode: AddressMode::D8,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::NC,param: 0}),
             (0x31, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD16,register_1: RegisterType::SP,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
             (0x32, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::HLDR,register_1: RegisterType::HL,register_2: RegisterType::A,condition_type: ConditionType::NONE,param: 0,}),
@@ -63,7 +63,7 @@ lazy_static! {
             (0x34, Instruction{instruction_type: InstructionType::INC, address_mode: AddressMode::MR, register_1: RegisterType::HL,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x35, Instruction{instruction_type: InstructionType::DEC,address_mode: AddressMode::MR,register_1: RegisterType::HL,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
             (0x36, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::MRD8,register_1: RegisterType::HL,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
-
+            (0x37, Instruction{instruction_type:InstructionType::SCF,address_mode: AddressMode::NONE,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x38, Instruction{instruction_type: InstructionType::JR, address_mode: AddressMode::D8,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::C,param: 0}),
             (0x39, Instruction{instruction_type: InstructionType::ADD, address_mode: AddressMode::RR, register_1: RegisterType::HL, register_2: RegisterType::SP,condition_type: ConditionType::NONE,param: 0}),
             (0x3A, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RHLD,register_1: RegisterType::A,register_2: RegisterType::HL,condition_type: ConditionType::NONE,param: 0,}),
@@ -71,7 +71,7 @@ lazy_static! {
             (0x3C, Instruction{instruction_type: InstructionType::INC, address_mode: AddressMode::R, register_1: RegisterType::A,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x3D, Instruction{instruction_type: InstructionType::DEC, address_mode: AddressMode::R, register_1: RegisterType::A,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x3E, Instruction{instruction_type: InstructionType::LD,address_mode: AddressMode::RD8,register_1: RegisterType::A,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0,}),
-
+            (0x3F, Instruction{instruction_type:InstructionType::CCF,address_mode: AddressMode::NONE,register_1: RegisterType::NONE,register_2: RegisterType::NONE,condition_type: ConditionType::NONE,param: 0}),
             (0x40, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR, register_1: RegisterType::B, register_2: RegisterType::B,condition_type: ConditionType::NONE,param: 0}),
             (0x41, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR, register_1: RegisterType::B, register_2: RegisterType::C,condition_type: ConditionType::NONE,param: 0}),
             (0x42, Instruction{instruction_type: InstructionType::LD, address_mode: AddressMode::RR, register_1: RegisterType::B, register_2: RegisterType::D,condition_type: ConditionType::NONE,param: 0}),
@@ -286,7 +286,7 @@ pub fn reg_lookup(index: u8) -> &'static RegisterType {
     if index > 0b111 {
         &RegisterType::NONE
     } else {
-        REGS.get(index as usize).expect(&format!("indedx to grab from reg_lookup should never be greater than 7 but was {}", index))
+        REGS.get(index as usize).expect(&format!("index to grab from reg_lookup should never be greater than 7 but was {}", index))
     }
 }
 
