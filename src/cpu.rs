@@ -1,3 +1,5 @@
+use std::fs::{File, OpenOptions};
+use std::io::{BufWriter, Write};
 use crate::cartridge::Bus;
 use crate::emu::EMU;
 use crate::instruction;
@@ -599,6 +601,7 @@ impl CPU {
     }
 
     pub fn step(&mut self) {
+        self.log_to_file();
         if !self.halted {
             self.fetch_instruction();
             self.fetch_data();
@@ -663,6 +666,34 @@ impl CPU {
         if self.enabling_ime {
             self.master_enabled = true;
         }
+    }
+
+    fn log_to_file(&self) {
+        let log = format!(
+            "A:{:#04X} F:{:#04X} B:{:#04X} C:{:#04X} D:{:#04X} E:{:#04X} H:{:#04X} L:{:#04X} SP:{:#06X} PC:{:#06X} PCMEM:{:#04X},{:#04X},{:#04X},{:#04X}\n",
+            self.register.a,
+            self.register.f,
+            self.register.b,
+            self.register.c,
+            self.register.d,
+            self.register.e,
+            self.register.h,
+            self.register.l,
+            self.register.sp,
+            self.register.pc,
+            self.bus.read(self.register.pc),
+            self.bus.read(self.register.pc + 1),
+            self.bus.read(self.register.pc + 2),
+            self.bus.read(self.register.pc + 3),
+        ).replace("0x", "");
+        let file = match OpenOptions::new()
+            .append(true)
+            .open("log.txt") {
+            Ok(file) => {file}
+            Err(_) => {File::create("log.txt").unwrap()}
+        };
+        let mut buffer = BufWriter::new(file);
+        buffer.write(log.as_ref()).unwrap();
     }
 
     fn handle_interrupts(&mut self) {

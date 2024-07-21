@@ -1,3 +1,4 @@
+use std::fs::File;
 use std::thread;
 use std::time::Duration;
 
@@ -34,6 +35,8 @@ impl EMU {
     }
 
     pub fn test(test_num: u8) -> Self {
+        File::create("log.txt").unwrap();
+
         let file = match test_num {
             1 => { "..\\gb-test-roms\\cpu_instrs\\individual\\01-special.gb" }
             2 => { "..\\gb-test-roms\\cpu_instrs\\individual\\02-interrupts.gb" }
