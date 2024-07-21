@@ -17,6 +17,6 @@ const DMG_ACID2: &str = "test_roms/dmg-acid2.test";
 const MEM_TIMING: &str = "test_roms/mem_timing.test";
 
 fn main() {
-    let mut emulation = EMU::from("test.gb");
+    let mut emulation = EMU::test(1);
     emulation.run();
 }

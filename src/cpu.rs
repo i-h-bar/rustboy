@@ -97,6 +97,25 @@ impl CPU {
         }
     }
 
+    pub fn test(bus: Bus) -> Self {
+        Self {
+            register: Register { a: 0x01, f: 0xB0, b: 0, c: 0x13, d: 0, e: 0xD8, h: 0x01, l: 0x4D, sp: 0xFFFE, pc: 0x0100 },
+            bus,
+            fetch_data: 0,
+            mem_dest: 0,
+            dest_is_mem: false,
+            current_op_code: 0,
+            instruction: Instruction::from(0).unwrap(),
+            halted: false,
+            stepping: false,
+            master_enabled: false,
+            enabling_ime: false,
+            int_flags: 0,
+            ie_register: 0,
+            cycle: 0,
+        }
+    }
+
     fn execute(&mut self) {
         self.process();
     }
