@@ -165,7 +165,17 @@ impl CPU {
                     self.register.set_h((val & 0x0F) == 0x0F);
                 }
             }
-            InstructionType::RLCA => {}
+            InstructionType::RLCA => {
+                let u: u8 = self.register.a as u8;
+                let c = (u >> 7) & 1;
+                let u = (u << 1) & c;
+                self.register.a = u as u16;
+
+                self.register.set_z(false);
+                self.register.set_n(false);
+                self.register.set_h(false);
+                self.register.set_c(c != 0);
+            }
             InstructionType::ADD => {
                 let val: u32;
                 let is_16bit = self.register.is_16bit(&self.instruction.register_1);
@@ -199,15 +209,45 @@ impl CPU {
 
                 self.set_register(&self.instruction.register_1, (val & 0xFFFF) as u16);
             }
-            InstructionType::RRCA => {}
-            InstructionType::STOP => {}
-            InstructionType::RLA => {}
+            InstructionType::RRCA => {
+                let b = self.register.a & 1;
+                self.register.a >>= 1;
+                self.register.a |= b << 7;
+
+                self.register.set_z(false);
+                self.register.set_n(false);
+                self.register.set_h(false);
+                self.register.set_c(b != 0);
+            }
+            InstructionType::STOP => {
+                panic!("Stop instruction called")
+            }
+            InstructionType::RLA => {
+                let u: u8 = self.register.a as u8;
+                let c = (u >> 7) & 1;
+                let u = (u << 1) & if self.register.c_flag() {1} else {0};
+                self.register.a = u as u16;
+
+                self.register.set_z(false);
+                self.register.set_n(false);
+                self.register.set_h(false);
+                self.register.set_c(c != 0);
+            }
             InstructionType::JR => {
                 let rel = (self.fetch_data & 0xFF) as i8;
                 let address = (self.register.pc as i16 + rel as i16) as u16;
                 self.go_to(address, false);
             }
-            InstructionType::RRA => {}
+            InstructionType::RRA => {
+                let b = self.register.a & 1;
+                self.register.a >>= 1;
+                self.register.a |= if self.register.c_flag() {1} else {0} << 7;
+
+                self.register.set_z(false);
+                self.register.set_n(false);
+                self.register.set_h(false);
+                self.register.set_c(b != 0);
+            }
             InstructionType::DAA => {}
             InstructionType::CPL => {}
             InstructionType::SCF => {}
