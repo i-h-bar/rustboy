@@ -218,7 +218,7 @@ impl CPU {
                 self.register.set_c(b != 0);
             }
             InstructionType::STOP => {
-                panic!("Stopping!")
+                panic!("Stop instruction called!")
             }
             InstructionType::RLA => {
                 let u = self.register.a as u8;
