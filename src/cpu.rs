@@ -894,10 +894,18 @@ impl CPU {
             RegisterType::E => self.register.e,
             RegisterType::H => self.register.h,
             RegisterType::L => self.register.l,
-            RegisterType::AF => reverse(self.register.a),
-            RegisterType::BC => reverse(self.register.b),
-            RegisterType::DE => reverse(self.register.d),
-            RegisterType::HL => reverse(self.register.h),
+            RegisterType::AF => {
+                (self.register.a << 8) | self.register.f
+            },
+            RegisterType::BC => {
+                (self.register.b << 8) | self.register.c
+            },
+            RegisterType::DE => {
+                (self.register.d << 8) | self.register.e
+            },
+            RegisterType::HL => {
+                (self.register.h << 8) | self.register.l
+            },
             RegisterType::SP => self.register.sp,
             RegisterType::PC => self.register.pc
         }
