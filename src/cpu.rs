@@ -78,6 +78,7 @@ pub struct CPU {
     int_flags: u8,
     ie_register: u8,
     cycle: u32,
+    log: String
 }
 
 impl CPU {
@@ -97,6 +98,7 @@ impl CPU {
             int_flags: 0,
             ie_register: 0,
             cycle: 0,
+            log: String::new(),
         }
     }
 
@@ -116,6 +118,7 @@ impl CPU {
             int_flags: 0,
             ie_register: 0,
             cycle: 0,
+            log: String::new(),
         }
     }
 
@@ -157,13 +160,13 @@ impl CPU {
                 }
 
                 if self.instruction.register_1 == RegisterType::HL && self.instruction.address_mode == AddressMode::MR {
-                    let val = (self.bus.read(self.read_register(&self.instruction.register_1)) as u8).wrapping_add(1);
+                    let val = (self.bus.read(self.read_register(&self.instruction.register_1))).wrapping_add(1);
                     let val = val & 0xFF;
 
-                    self.bus.write(self.read_register(&self.instruction.register_1), val)
+                    self.bus.write(self.read_register(&self.instruction.register_1), val as u8)
                 } else {
-                    let val = (self.read_register(&self.instruction.register_1) as u8).wrapping_add(1);
-                    self.set_register(&self.instruction.register_1, val as u16)
+                    let val = self.read_register(&self.instruction.register_1).wrapping_add(1);
+                    self.set_register(&self.instruction.register_1, val)
                 }
 
                 if (self.current_op_code & 0x03) != 0x03 {
@@ -602,12 +605,8 @@ impl CPU {
     }
 
     pub fn step(&mut self) {
-        if self.cycle > 100 {
-            process::exit(0);
-        }
-
-        self.log_to_file();
-        self.log_to_stdout();
+        self.log();
+        // self.log_to_stdout();
         if !self.halted {
             self.fetch_instruction();
             self.fetch_data();
@@ -677,7 +676,7 @@ impl CPU {
         );
     }
 
-    fn log_to_file(&self) {
+    fn log(&mut self) {
         let log = format!(
             "A:{:#04X} F:{:#04X} B:{:#04X} C:{:#04X} D:{:#04X} E:{:#04X} H:{:#04X} L:{:#04X} SP:{:#06X} PC:{:#06X} PCMEM:{:#04X},{:#04X},{:#04X},{:#04X}\n",
             self.register.a,
@@ -695,6 +694,10 @@ impl CPU {
             self.bus.read(self.register.pc + 2),
             self.bus.read(self.register.pc + 3),
         ).replace("0x", "");
+        self.log.push_str(&log);
+    }
+
+    fn save_log(&self) {
         let file = match OpenOptions::new()
             .append(true)
             .open("log.txt") {
@@ -702,7 +705,7 @@ impl CPU {
             Err(_) => {File::create("log.txt").unwrap()}
         };
         let mut buffer = BufWriter::new(file);
-        buffer.write(log.as_ref()).unwrap();
+        buffer.write(self.log.as_ref()).unwrap();
     }
 
     fn handle_interrupts(&mut self) {
@@ -1045,6 +1048,12 @@ impl CPU {
             self.register.pc = (hi << 8) | lo;
             EMU::cycles(1)
         }
+    }
+}
+
+impl Drop for CPU {
+    fn drop(&mut self) {
+        self.save_log();
     }
 }
 
