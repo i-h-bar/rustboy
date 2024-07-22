@@ -1,5 +1,6 @@
 use std::fs::{File, OpenOptions};
 use std::io::{BufWriter, Write};
+use std::process;
 use crate::cartridge::Bus;
 use crate::emu::EMU;
 use crate::instruction;
@@ -601,53 +602,16 @@ impl CPU {
     }
 
     pub fn step(&mut self) {
+        if self.cycle > 100 {
+            process::exit(0);
+        }
+
         self.log_to_file();
+        self.log_to_stdout();
         if !self.halted {
             self.fetch_instruction();
             self.fetch_data();
             self.execute();
-            let z: &str;
-            let n: &str;
-            let h: &str;
-            let c: &str;
-            if self.register.z_flag() {
-                z = "Z";
-            } else {
-                z = "-";
-            }
-            if self.register.n_flag() {
-                n = "N";
-            } else {
-                n = "-";
-            }
-            if self.register.h_flag() {
-                h = "H";
-            } else {
-                h = "-";
-            }
-            if self.register.c_flag() {
-                c = "C";
-            } else {
-                c = "-";
-            }
-
-            println!(
-                "{:#08x}: {:#04x} {: <4} | PC: {:#06x} | DATA {:#06x} | a: {:#04x}; bc: {:#06x}; de: {:#06x}; sp: {:#06x}; hl: {:#06x} | {}{}{}{}",
-                self.cycle,
-                self.current_op_code,
-                self.instruction.instruction_type.to_string(),
-                self.register.pc,
-                self.fetch_data,
-                self.register.a,
-                self.read_register(&RegisterType::BC),
-                self.read_register(&RegisterType::DE),
-                self.register.sp,
-                self.read_register(&RegisterType::HL),
-                z,
-                n,
-                h,
-                c
-            );
 
             self.cycle += 1;
         } else {
@@ -666,6 +630,51 @@ impl CPU {
         if self.enabling_ime {
             self.master_enabled = true;
         }
+    }
+
+    fn log_to_stdout(&self) {
+        let z: &str;
+        let n: &str;
+        let h: &str;
+        let c: &str;
+        if self.register.z_flag() {
+            z = "Z";
+        } else {
+            z = "-";
+        }
+        if self.register.n_flag() {
+            n = "N";
+        } else {
+            n = "-";
+        }
+        if self.register.h_flag() {
+            h = "H";
+        } else {
+            h = "-";
+        }
+        if self.register.c_flag() {
+            c = "C";
+        } else {
+            c = "-";
+        }
+
+        println!(
+            "{:#08x}: {:#04x} {: <4} | PC: {:#06x} | DATA {:#06x} | a: {:#04x}; bc: {:#06x}; de: {:#06x}; sp: {:#06x}; hl: {:#06x} | {}{}{}{}",
+            self.cycle,
+            self.current_op_code,
+            self.instruction.instruction_type.to_string(),
+            self.register.pc,
+            self.fetch_data,
+            self.register.a,
+            self.read_register(&RegisterType::BC),
+            self.read_register(&RegisterType::DE),
+            self.register.sp,
+            self.read_register(&RegisterType::HL),
+            z,
+            n,
+            h,
+            c
+        );
     }
 
     fn log_to_file(&self) {
@@ -935,10 +944,34 @@ impl CPU {
             RegisterType::E => { self.register.e = value & 0xFF }
             RegisterType::H => { self.register.h = value & 0xFF }
             RegisterType::L => { self.register.l = value & 0xFF }
-            RegisterType::AF => { self.register.a = reverse(value) }
-            RegisterType::BC => { self.register.b = reverse(value) }
-            RegisterType::DE => { self.register.d = reverse(value) }
-            RegisterType::HL => { self.register.h = reverse(value) }
+            RegisterType::AF => {
+                let value = reverse(value);
+                let hi = value & 0xFF;
+                let lo = value >> 8;
+                self.register.a = hi;
+                self.register.f = lo;
+            }
+            RegisterType::BC => {
+                let value = reverse(value);
+                let hi = value & 0xFF;
+                let lo = value >> 8;
+                self.register.b = hi;
+                self.register.c = lo;
+            }
+            RegisterType::DE => {
+                let value = reverse(value);
+                let hi = value & 0xFF;
+                let lo = value >> 8;
+                self.register.d = hi;
+                self.register.e = lo;
+            }
+            RegisterType::HL => {
+                let value = reverse(value);
+                let hi = value & 0xFF;
+                let lo = value >> 8;
+                self.register.h = hi;
+                self.register.l = lo;
+            }
             RegisterType::SP => { self.register.sp = value }
             RegisterType::PC => { self.register.pc = value }
         }
