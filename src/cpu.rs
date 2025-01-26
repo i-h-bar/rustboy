@@ -1,11 +1,10 @@
 use crate::cartridge::Bus;
-use crate::cpu::{
-    actions::Action, addresses::AddressMode, conditions::ConditionType, registers::RegisterType,
-};
+use crate::cpu::{conditions::ConditionType, register::RegisterType};
 use crate::emu::EMU;
 use crate::interrupts;
 use crate::interrupts::Interrupt;
 use instructions::Instruction;
+use register::Register;
 use std::fs::{File, OpenOptions};
 use std::io::{BufWriter, Write};
 
@@ -13,67 +12,7 @@ mod actions;
 mod addresses;
 mod conditions;
 mod instructions;
-mod registers;
-
-#[derive(Debug)]
-pub struct Register {
-    a: u16,
-    f: u16,
-    b: u16,
-    c: u16,
-    d: u16,
-    e: u16,
-    h: u16,
-    l: u16,
-    sp: u16,
-    pc: u16,
-}
-
-impl Register {
-    fn z_flag(&self) -> bool {
-        bit(self.f as u8, 7)
-    }
-
-    fn n_flag(&self) -> bool {
-        bit(self.f as u8, 6)
-    }
-
-    fn h_flag(&self) -> bool {
-        bit(self.f as u8, 5)
-    }
-
-    fn c_flag(&self) -> bool {
-        bit(self.f as u8, 4)
-    }
-
-    fn set_z(&mut self, on: bool) {
-        self.f = bit_set(self.f as u8, 7, on) as u16;
-    }
-
-    fn set_n(&mut self, on: bool) {
-        self.f = bit_set(self.f as u8, 6, on) as u16;
-    }
-
-    fn set_h(&mut self, on: bool) {
-        self.f = bit_set(self.f as u8, 5, on) as u16;
-    }
-
-    fn set_c(&mut self, on: bool) {
-        self.f = bit_set(self.f as u8, 4, on) as u16;
-    }
-
-    fn is_16bit(&self, reg_type: &RegisterType) -> bool {
-        match reg_type {
-            RegisterType::AF
-            | RegisterType::BC
-            | RegisterType::DE
-            | RegisterType::HL
-            | RegisterType::SP
-            | RegisterType::PC => true,
-            _ => false,
-        }
-    }
-}
+mod register;
 
 pub struct CPU {
     register: Register,

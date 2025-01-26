@@ -1,5 +1,5 @@
 use crate::cpu::instructions::Instruction;
-use crate::cpu::registers::RegisterType;
+use crate::cpu::register::RegisterType;
 use crate::cpu::CPU;
 use crate::emu::EMU;
 

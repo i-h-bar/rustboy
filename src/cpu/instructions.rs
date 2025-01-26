@@ -1,7 +1,7 @@
 use crate::cpu::actions::Action;
 use crate::cpu::addresses::AddressMode;
 use crate::cpu::conditions::ConditionType;
-use crate::cpu::registers::RegisterType;
+use crate::cpu::register::RegisterType;
 use crate::cpu::CPU;
 
 pub struct Instruction {
@@ -307,7 +307,7 @@ mod tests {
     use crate::cpu::addresses::AddressMode;
     use crate::cpu::conditions::ConditionType;
     use crate::cpu::instructions::Instruction;
-    use crate::cpu::registers::RegisterType;
+    use crate::cpu::register::RegisterType;
 
     #[test]
     fn test_instruction_from_op_code() {

@@ -1,7 +1,7 @@
 use crate::cpu::addresses::AddressMode;
 use crate::cpu::instructions::Instruction;
-use crate::cpu::registers::RegisterType;
-use crate::cpu::{registers, CPU};
+use crate::cpu::register::RegisterType;
+use crate::cpu::{register, CPU};
 use crate::emu::EMU;
 use std::fmt;
 use std::fmt::Debug;
@@ -95,8 +95,8 @@ impl Action {
 
                         cpu.set_register(
                             instruction.register_1,
-                            (cpu.read_register(instruction.register_2) as i8
-                                + cpu.fetch_data as i8) as u16,
+                            (cpu.read_register(instruction.register_2) as i8 + cpu.fetch_data as i8)
+                                as u16,
                         );
                     } else {
                         cpu.set_register(instruction.register_1, cpu.fetch_data)
@@ -410,7 +410,7 @@ impl Action {
             Action::RET => cpu.return_from_procedure(&instruction),
             Action::CB => {
                 let op = cpu.fetch_data as u8;
-                let reg = registers::reg_lookup(op & 0b111);
+                let reg = register::reg_lookup(op & 0b111);
                 let bit = (op >> 3) & 0b111;
                 let bit_op = (op >> 6) & 0b11;
                 let mut reg_val = cpu.read_register8(&reg);
