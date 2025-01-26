@@ -9,21 +9,21 @@ pub struct Instruction {
     pub address: &'static AddressMode,
     pub register_1: &'static RegisterType,
     pub register_2: &'static RegisterType,
-    pub condition_type: &'static ConditionType,
+    pub condition: &'static ConditionType,
     pub param: &'static u16,
 }
 
 impl Instruction {
     pub fn from(opcode: u8) -> Self {
-        let (action, address_mode, register_1, register_2, condition_type, param) =
+        let (action, address, register_1, register_2, condition, param) =
             &OP_CODES[opcode as usize];
 
         Self {
             action,
-            address: address_mode,
+            address,
             register_1,
             register_2,
-            condition_type,
+            condition,
             param,
         }
     }
@@ -329,7 +329,7 @@ mod tests {
             RegisterType::NONE => {}
             _ => panic!("Not correct reg type"),
         }
-        match inst.condition_type {
+        match inst.condition {
             ConditionType::NONE => {}
             _ => panic!("Not correct reg type"),
         }
@@ -358,7 +358,7 @@ mod tests {
             _ => panic!("Not correct reg type"),
         }
 
-        match inst.condition_type {
+        match inst.condition {
             ConditionType::NONE => {}
             _ => panic!("Not correct reg type"),
         }

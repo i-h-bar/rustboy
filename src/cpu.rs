@@ -386,16 +386,6 @@ impl CPU {
         }
     }
 
-    fn check_condition(&self) -> bool {
-        match self.instruction.condition_type {
-            ConditionType::NONE => true,
-            ConditionType::NZ => !self.register.z_flag(),
-            ConditionType::Z => self.register.z_flag(),
-            ConditionType::NC => !self.register.c_flag(),
-            ConditionType::C => self.register.c_flag(),
-        }
-    }
-
     fn stack_push(&mut self, data: u8) {
         self.register.sp = self.register.sp.wrapping_sub(1);
         self.bus.write(self.register.sp, data);
@@ -420,8 +410,8 @@ impl CPU {
         (hi << 8) | lo
     }
 
-    fn go_to(&mut self, address: u16, push_pc: bool) {
-        if self.check_condition() {
+    fn go_to(&mut self, address: u16, push_pc: bool, instruction: &Instruction) {
+        if instruction.condition.check(self) {
             if push_pc {
                 EMU::cycles(2);
                 self.stack_push16(self.register.pc)
@@ -432,13 +422,13 @@ impl CPU {
         }
     }
 
-    fn return_from_procedure(&mut self) {
-        match self.instruction.condition_type {
+    fn return_from_procedure(&mut self, instruction: &Instruction) {
+        match self.instruction.condition {
             ConditionType::NONE => {}
             _ => EMU::cycles(1),
         }
 
-        if self.check_condition() {
+        if instruction.condition.check(self) {
             let lo = self.stack_pop();
             EMU::cycles(1);
             let hi = self.stack_pop();

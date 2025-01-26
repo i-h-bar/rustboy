@@ -245,7 +245,7 @@ impl Action {
             Action::JR => {
                 let rel = (cpu.fetch_data & 0xFF) as i8;
                 let address = (cpu.register.pc as i16 + rel as i16) as u16;
-                cpu.go_to(address, false);
+                cpu.go_to(address, false, &instruction);
             }
             Action::RRA => {
                 let new_c = (cpu.register.a & 1) as u8;
@@ -394,7 +394,7 @@ impl Action {
                 }
             }
             Action::JUMP => {
-                cpu.go_to(cpu.fetch_data, false);
+                cpu.go_to(cpu.fetch_data, false, &instruction);
             }
             Action::PUSH => {
                 let hi = (cpu.read_register(instruction.register_1) >> 8) & 0xFF;
@@ -407,7 +407,7 @@ impl Action {
 
                 EMU::cycles(1);
             }
-            Action::RET => cpu.return_from_procedure(),
+            Action::RET => cpu.return_from_procedure(&instruction),
             Action::CB => {
                 let op = cpu.fetch_data as u8;
                 let reg = registers::reg_lookup(op & 0b111);
@@ -549,11 +549,11 @@ impl Action {
                 }
             }
             Action::CALL => {
-                cpu.go_to(cpu.fetch_data, true);
+                cpu.go_to(cpu.fetch_data, true, &instruction);
             }
             Action::RETI => {
                 cpu.master_enabled = true;
-                cpu.return_from_procedure()
+                cpu.return_from_procedure(&instruction)
             }
             Action::LDH => {
                 match instruction.register_1 {
@@ -574,7 +574,7 @@ impl Action {
                 cpu.enabling_ime = true;
             }
             Action::RST => {
-                cpu.go_to(*instruction.param, true);
+                cpu.go_to(*instruction.param, true, &instruction);
             }
             Action::ERR => {}
             Action::RLC => {}
