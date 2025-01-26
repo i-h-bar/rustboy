@@ -14,10 +14,10 @@ const JOY_PAD: u8 = 16;
 
 pub fn fetch_interrupt_num(interrupt: Interrupt) -> u8 {
     match interrupt {
-        Interrupt::VBlank => { V_BLANK }
-        Interrupt::LCDStat => { LCD_STRAT }
-        Interrupt::Timer => { TIMER }
-        Interrupt::Serial => { SERIAL }
-        Interrupt::JoyPad => { JOY_PAD }
+        Interrupt::VBlank => V_BLANK,
+        Interrupt::LCDStat => LCD_STRAT,
+        Interrupt::Timer => TIMER,
+        Interrupt::Serial => SERIAL,
+        Interrupt::JoyPad => JOY_PAD,
     }
 }
