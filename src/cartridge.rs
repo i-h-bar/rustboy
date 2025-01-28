@@ -448,6 +448,7 @@ pub struct Bus {
     cartridge: Cartridge,
     ram: RAM,
     ie_register: u8,
+    serial_data: [u8; 2]
 }
 
 impl Bus {
@@ -457,6 +458,7 @@ impl Bus {
             cartridge,
             ram,
             ie_register: 0,
+            serial_data: [0; 2]
         }
     }
 
@@ -476,7 +478,7 @@ impl Bus {
         } else if address < 0xFF00 {
             0
         } else if address < 0xFF80 {
-            0 //todo!()
+            self.io_read(address) as u16
         } else if address == 0xFFFF {
             self.ie_register as u16
         } else {
@@ -506,12 +508,31 @@ impl Bus {
                 address
             )
         } else if address < 0xFF80 {
-            //todo!()
+            self.io_write(address, value)
         } else if address == 0xFFFF {
             self.ie_register = value;
         } else {
             self.ram.hram_write(address, value)
         }
+    }
+
+    fn io_write(&mut self, address: u16, value: u8) {
+        if address == 0xFF01 {
+            self.serial_data[0] = value;
+            return;
+        }
+        if address == 0xFF02 {
+            self.serial_data[1] = value;
+            return;
+        }
+
+        // todo!()
+    }
+
+    fn io_read(&self, address: u16) -> u8 {
+        if address == 0xFF01 { return self.serial_data[0]; }
+        if address == 0xFF02 { return self.serial_data[1]; }
+        0
     }
 
     pub fn read16(&self, address: u16) -> u16 {

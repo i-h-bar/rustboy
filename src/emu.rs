@@ -22,7 +22,7 @@ impl EMU {
         let bus = Bus::from(cartridge);
         let cpu = CPU::from(bus);
         let ppu = PPU {};
-        let timer = Timer {};
+        let timer = Timer::new();
 
         EMU {
             cpu,
@@ -54,7 +54,7 @@ impl EMU {
         let bus = Bus::from(cartridge);
         let cpu = CPU::test(bus);
         let ppu = PPU {};
-        let timer = Timer {};
+        let timer = Timer::new();
 
         EMU {
             cpu,

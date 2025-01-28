@@ -30,6 +30,7 @@ pub struct CPU {
     ie_register: u8,
     cycle: u32,
     log: String,
+    debug_message: String,
 }
 
 impl CPU {
@@ -61,6 +62,7 @@ impl CPU {
             ie_register: 0,
             cycle: 0,
             log: String::new(),
+            debug_message: String::new(),
         }
     }
 
@@ -92,11 +94,14 @@ impl CPU {
             ie_register: 0,
             cycle: 0,
             log: String::new(),
+            debug_message: String::new(),
         }
     }
 
     pub fn step(&mut self) {
         self.log();
+        self.debug_update();
+        self.debug_print();
         // self.log_to_stdout();
         if !self.halted {
             let instruction = self.fetch_instruction();
@@ -189,11 +194,24 @@ impl CPU {
 
     fn save_log(&self) {
         let file = match OpenOptions::new().append(true).open("log.txt") {
-            Ok(file) => file,
-            Err(_) => File::create("log.txt").unwrap(),
+            Ok(file) => File::create("log.txt").expect("Could not create log.txt"),
+            Err(_) => File::create("log.txt").expect("Could not create log.txt"),
         };
         let mut buffer = BufWriter::new(file);
-        buffer.write(self.log.as_ref()).unwrap();
+        buffer.write(self.log.as_ref()).expect("Could not write to log.txt");
+    }
+
+    fn debug_update(&mut self) {
+        if self.bus.read(0xFF02) as u8 == 0x81 {
+            self.debug_message.push(self.bus.read(0xFF01) as u8 as char);
+            self.bus.write(0xFF02, 0x00);
+        }
+    }
+
+    fn debug_print(&self) {
+        if !self.debug_message.is_empty() {
+            println!("DBG: {}", self.debug_message);
+        }
     }
 
     fn handle_interrupts(&mut self) {
