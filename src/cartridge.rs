@@ -466,7 +466,7 @@ impl Bus {
         if address < 0x8000 {
             self.cartridge.read(address) as u16
         } else if address < 0xA000 {
-            0 //todo!()
+            todo!() // 0
         } else if address < 0xC000 {
             self.cartridge.read(address) as u16
         } else if address < 0xE000 {
@@ -474,7 +474,7 @@ impl Bus {
         } else if address < 0xFE00 {
             0
         } else if address < 0xFEA0 {
-            0 //todo!()
+            todo!() // 0
         } else if address < 0xFF00 {
             0
         } else if address < 0xFF80 {
@@ -490,7 +490,7 @@ impl Bus {
         if address < 0x8000 {
             self.cartridge.write(address, value)
         } else if address < 0xA000 {
-            //todo!()
+            todo!()
         } else if address < 0xC000 {
             self.cartridge.write(address, value)
         } else if address < 0xE000 {
@@ -501,7 +501,7 @@ impl Bus {
                 address
             )
         } else if address < 0xFEA0 {
-            //todo!()
+            todo!()
         } else if address < 0xFF00 {
             panic!(
                 "Cannot write to address: {:#05x} as it is in a reserved section",
@@ -526,7 +526,7 @@ impl Bus {
             return;
         }
 
-        // todo!()
+        todo!()
     }
 
     fn io_read(&self, address: u16) -> u8 {
