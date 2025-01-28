@@ -241,7 +241,7 @@ const OP_CODES: [(
     (Action::JUMP, AddressMode::D16, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xC3
     (Action::CALL, AddressMode::D16, RegisterType::NONE, RegisterType::NONE, ConditionType::NZ, 0,), // 0xC4
     (Action::PUSH, AddressMode::R, RegisterType::BC, RegisterType::NONE, ConditionType::NONE, 0,), // 0xC5
-    (Action::ADD, AddressMode::RA8, RegisterType::A, RegisterType::NONE, ConditionType::NONE, 0,), // 0xC6
+    (Action::ADD, AddressMode::RD8, RegisterType::A, RegisterType::NONE, ConditionType::NONE, 0,), // 0xC6
     (Action::RST, AddressMode::IMP, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xC7
     (Action::RET, AddressMode::IMP, RegisterType::NONE, RegisterType::NONE, ConditionType::Z, 0,), // 0xC8
     (Action::RET, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xC9
@@ -257,7 +257,7 @@ const OP_CODES: [(
     (Action::NONE, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,),
     (Action::CALL, AddressMode::D16, RegisterType::NONE, RegisterType::NONE, ConditionType::NC, 0,), // 0xD4
     (Action::PUSH, AddressMode::R, RegisterType::DE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xD5
-    (Action::SUB, AddressMode::D8, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xD6
+    (Action::SUB, AddressMode::RD8, RegisterType::A, RegisterType::NONE, ConditionType::NONE, 0,), // 0xD6
     (Action::RST, AddressMode::IMP, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0x10,), // 0xD7
     (Action::RET, AddressMode::IMP, RegisterType::NONE, RegisterType::NONE, ConditionType::C, 0,), // 0xD8
     (Action::RETI, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xD9
@@ -273,15 +273,15 @@ const OP_CODES: [(
     (Action::NONE, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,),
     (Action::NONE, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,),
     (Action::PUSH, AddressMode::R, RegisterType::HL, RegisterType::NONE, ConditionType::NONE, 0,), // 0xE5
-    (Action::AND, AddressMode::D8, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xE6
+    (Action::AND, AddressMode::RD8, RegisterType::A, RegisterType::NONE, ConditionType::NONE, 0,), // 0xE6
     (Action::RST, AddressMode::IMP, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0x20,), // 0xE7
     (Action::ADD, AddressMode::RD8, RegisterType::SP, RegisterType::NONE, ConditionType::NONE, 0,), // 0xE8
-    (Action::JUMP, AddressMode::MR, RegisterType::HL, RegisterType::NONE, ConditionType::NONE, 0,), // 0xE9
+    (Action::JUMP, AddressMode::R, RegisterType::HL, RegisterType::NONE, ConditionType::NONE, 0,), // 0xE9
     (Action::LD, AddressMode::A16R, RegisterType::NONE, RegisterType::A, ConditionType::NONE, 0,), // 0xEA
     (Action::NONE, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,),
     (Action::NONE, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,),
     (Action::NONE, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,),
-    (Action::XOR, AddressMode::D8, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xEE
+    (Action::XOR, AddressMode::RD8, RegisterType::A, RegisterType::NONE, ConditionType::NONE, 0,), // 0xEE
     (Action::RST, AddressMode::IMP, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0x28), // 0xEF
     (Action::LDH, AddressMode::RA8, RegisterType::A, RegisterType::NONE, ConditionType::NONE, 0,), // 0xF0
     (Action::POP, AddressMode::R, RegisterType::AF, RegisterType::NONE, ConditionType::NONE, 0,), // 0xF1
@@ -289,7 +289,7 @@ const OP_CODES: [(
     (Action::DI, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xF3
     (Action::NONE, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,),
     (Action::PUSH, AddressMode::R, RegisterType::AF, RegisterType::NONE, ConditionType::NONE, 0,), // 0xF5
-    (Action::OR, AddressMode::D8, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xF6
+    (Action::OR, AddressMode::RD8, RegisterType::A, RegisterType::NONE, ConditionType::NONE, 0,), // 0xF6
     (Action::RST, AddressMode::IMP, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0x30,), // 0xF7
     (Action::LD, AddressMode::HLSPR, RegisterType::HL, RegisterType::SP, ConditionType::NONE, 0,), // 0xF8
     (Action::LD, AddressMode::RR, RegisterType::SP, RegisterType::HL, ConditionType::NONE, 0,), // 0xF9
@@ -297,7 +297,7 @@ const OP_CODES: [(
     (Action::EI, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xFB
     (Action::NONE, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,),
     (Action::NONE, AddressMode::NONE, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,),
-    (Action::CP, AddressMode::D8, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0,), // 0xFE
+    (Action::CP, AddressMode::RD8, RegisterType::A, RegisterType::NONE, ConditionType::NONE, 0,), // 0xFE
     (Action::RST, AddressMode::IMP, RegisterType::NONE, RegisterType::NONE, ConditionType::NONE, 0x38), // 0xFF
 ];
 
