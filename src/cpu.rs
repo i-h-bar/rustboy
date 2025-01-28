@@ -31,6 +31,7 @@ pub struct CPU {
     cycle: u32,
     log: String,
     debug_message: String,
+    emu_cycles: u8,
 }
 
 impl CPU {
@@ -63,6 +64,7 @@ impl CPU {
             cycle: 0,
             log: String::new(),
             debug_message: String::new(),
+            emu_cycles: 0,
         }
     }
 
@@ -95,10 +97,12 @@ impl CPU {
             cycle: 0,
             log: String::new(),
             debug_message: String::new(),
+            emu_cycles: 0,
         }
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> u8 {
+        self.emu_cycles = 0;
         self.log();
         self.debug_update();
         self.debug_print();
@@ -109,7 +113,7 @@ impl CPU {
 
             self.cycle += 1;
         } else {
-            EMU::cycles(1);
+            self.emu_cycles += 1;
 
             if self.int_flags != 0 {
                 self.halted = false;
@@ -124,6 +128,8 @@ impl CPU {
         if self.enabling_ime {
             self.master_enabled = true;
         }
+
+        self.emu_cycles
     }
 
     fn log_to_stdout(&self) {
@@ -387,9 +393,9 @@ impl CPU {
 
         if instruction.condition.check(self) {
             let lo = self.stack_pop();
-            EMU::cycles(1);
+            self.emu_cycles += 1;
             let hi = self.stack_pop();
-            EMU::cycles(1);
+            self.emu_cycles += 1;
             self.register.pc = (hi << 8) | lo;
             EMU::cycles(1)
         }

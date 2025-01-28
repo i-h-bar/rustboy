@@ -75,7 +75,7 @@ impl EMU {
                 continue;
             }
 
-            self.cpu.step();
+            let cycles = self.cpu.step();
             self.ticks += 1;
         }
     }

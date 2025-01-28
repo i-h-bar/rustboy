@@ -73,7 +73,7 @@ impl Action {
             Action::LD => {
                 if cpu.dest_is_mem {
                     if cpu.register.is_16bit(instruction.register_2) {
-                        EMU::cycles(1);
+                        cpu.emu_cycles += 1;
                         cpu.bus.write16(cpu.mem_dest, cpu.fetch_data);
                     } else {
                         cpu.bus.write(cpu.mem_dest, cpu.fetch_data as u8);
@@ -105,7 +105,7 @@ impl Action {
             }
             Action::INC => {
                 if cpu.register.is_16bit(instruction.register_1) {
-                    EMU::cycles(1);
+                    cpu.emu_cycles += 1;
                 }
 
                 if *instruction.register_1 == RegisterType::HL
@@ -131,7 +131,7 @@ impl Action {
             }
             Action::DEC => {
                 if cpu.register.is_16bit(instruction.register_1) {
-                    EMU::cycles(1);
+                    cpu.emu_cycles += 1;
                 }
 
                 if *instruction.register_1 == RegisterType::HL
@@ -170,7 +170,7 @@ impl Action {
                 let is_16bit = cpu.register.is_16bit(instruction.register_1);
 
                 if is_16bit {
-                    EMU::cycles(1);
+                    cpu.emu_cycles += 1;
                 }
 
                 if *instruction.register_1 == RegisterType::SP {
@@ -382,9 +382,9 @@ impl Action {
             }
             Action::POP => {
                 let lo = cpu.stack_pop();
-                EMU::cycles(1);
+                cpu.emu_cycles += 1;
                 let hi = cpu.stack_pop();
-                EMU::cycles(1);
+                cpu.emu_cycles += 1;
 
                 let num = (hi << 8) | lo;
 
@@ -398,14 +398,14 @@ impl Action {
             }
             Action::PUSH => {
                 let hi = (cpu.read_register(instruction.register_1) >> 8) & 0xFF;
-                EMU::cycles(1);
+                cpu.emu_cycles += 1;
                 cpu.stack_push(hi as u8);
 
                 let lo = cpu.read_register(instruction.register_1) & 0xFF;
-                EMU::cycles(1);
+                cpu.emu_cycles += 1;
                 cpu.stack_push(lo as u8);
 
-                EMU::cycles(1);
+                cpu.emu_cycles += 1;
             }
             Action::RET => cpu.return_from_procedure(&instruction),
             Action::CB => {
@@ -415,10 +415,10 @@ impl Action {
                 let bit_op = (op >> 6) & 0b11;
                 let mut reg_val = cpu.read_register8(&reg);
 
-                EMU::cycles(1);
+                cpu.emu_cycles += 1;
 
                 if reg == &RegisterType::HL {
-                    EMU::cycles(2);
+                    cpu.emu_cycles += 2;
                 }
 
                 match bit_op {
