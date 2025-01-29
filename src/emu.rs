@@ -1,4 +1,3 @@
-use std::fs::File;
 use std::thread;
 use std::time::Duration;
 
@@ -12,7 +11,6 @@ pub struct EMU {
     ppu: PPU,
     running: bool,
     paused: bool,
-    ticks: u64,
 }
 
 impl EMU {
@@ -27,7 +25,6 @@ impl EMU {
             ppu,
             running: false,
             paused: false,
-            ticks: 0,
         }
     }
 
@@ -58,7 +55,6 @@ impl EMU {
             ppu,
             running: false,
             paused: false,
-            ticks: 0,
         }
     }
 
@@ -72,7 +68,6 @@ impl EMU {
             }
 
             self.cpu.step();
-            self.ticks += 1;
         }
     }
 
