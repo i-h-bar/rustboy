@@ -1,4 +1,3 @@
-use crate::cpu::instructions::Instruction;
 use crate::cpu::CPU;
 
 pub enum ConditionType {

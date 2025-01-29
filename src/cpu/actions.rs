@@ -2,7 +2,6 @@ use crate::cpu::addresses::AddressMode;
 use crate::cpu::instructions::Instruction;
 use crate::cpu::register::RegisterType;
 use crate::cpu::{register, CPU};
-use crate::emu::EMU;
 use std::fmt;
 use std::fmt::Debug;
 
@@ -272,9 +271,9 @@ impl Action {
                 }
 
                 if cpu.register.n_flag() {
-                    cpu.register.a.wrapping_sub(u);
+                    cpu.register.a = cpu.register.a.wrapping_sub(u);
                 } else {
-                    cpu.register.a.wrapping_add(u);
+                    cpu.register.a = cpu.register.a.wrapping_add(u);
                 }
                 cpu.register.set_z(cpu.register.a == 0);
                 cpu.register.set_h(false);
@@ -564,7 +563,7 @@ impl Action {
                     _ => cpu.bus.write(cpu.mem_dest, cpu.register.a as u8),
                 }
 
-                EMU::cycles(1)
+                cpu.timer.emu_cycles(1);
             }
             Action::JPHL => {}
             Action::DI => {

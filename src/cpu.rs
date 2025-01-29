@@ -1,13 +1,12 @@
 use crate::cartridge::Bus;
 use crate::cpu::{conditions::ConditionType, register::RegisterType};
-use crate::emu::EMU;
 use crate::interrupts;
 use crate::interrupts::Interrupt;
+use crate::tpu::Timer;
 use instructions::Instruction;
 use register::Register;
 use std::fs::{File, OpenOptions};
 use std::io::{BufWriter, Write};
-use crate::tpu::Timer;
 
 mod actions;
 mod addresses;
@@ -32,7 +31,7 @@ pub struct CPU {
     ie_register: u8,
     cycle: u32,
     log: String,
-    debug_message: String
+    debug_message: String,
 }
 
 impl CPU {
@@ -66,7 +65,7 @@ impl CPU {
             ie_register: 0,
             cycle: 0,
             log: String::new(),
-            debug_message: String::new()
+            debug_message: String::new(),
         }
     }
 
@@ -204,7 +203,9 @@ impl CPU {
             Err(_) => File::create("log.txt").expect("Could not create log.txt"),
         };
         let mut buffer = BufWriter::new(file);
-        buffer.write(self.log.as_ref()).expect("Could not write to log.txt");
+        buffer
+            .write(self.log.as_ref())
+            .expect("Could not write to log.txt");
     }
 
     fn debug_update(&mut self) {
@@ -376,19 +377,19 @@ impl CPU {
     fn go_to(&mut self, address: u16, push_pc: bool, instruction: &Instruction) {
         if instruction.condition.check(self) {
             if push_pc {
-                EMU::cycles(2);
+                self.timer.emu_cycles(2);
                 self.stack_push16(self.register.pc)
             }
 
             self.register.pc = address;
-            EMU::cycles(1)
+            self.timer.emu_cycles(1);
         }
     }
 
     fn return_from_procedure(&mut self, instruction: &Instruction) {
         match self.instruction.condition {
             ConditionType::NONE => {}
-            _ => EMU::cycles(1),
+            _ => self.timer.emu_cycles(1),
         }
 
         if instruction.condition.check(self) {
@@ -397,7 +398,7 @@ impl CPU {
             let hi = self.stack_pop();
             self.timer.emu_cycles(1);
             self.register.pc = (hi << 8) | lo;
-            EMU::cycles(1)
+            self.timer.emu_cycles(1);
         }
     }
 }
