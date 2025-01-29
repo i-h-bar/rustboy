@@ -10,7 +10,6 @@ use crate::tpu::Timer;
 pub struct EMU {
     cpu: CPU,
     ppu: PPU,
-    timer: Timer,
     running: bool,
     paused: bool,
     ticks: u64,
@@ -22,12 +21,10 @@ impl EMU {
         let bus = Bus::from(cartridge);
         let cpu = CPU::from(bus);
         let ppu = PPU {};
-        let timer = Timer::new();
 
         EMU {
             cpu,
             ppu,
-            timer,
             running: false,
             paused: false,
             ticks: 0,
@@ -59,7 +56,6 @@ impl EMU {
         EMU {
             cpu,
             ppu,
-            timer,
             running: false,
             paused: false,
             ticks: 0,
@@ -75,7 +71,7 @@ impl EMU {
                 continue;
             }
 
-            let cycles = self.cpu.step();
+            self.cpu.step();
             self.ticks += 1;
         }
     }

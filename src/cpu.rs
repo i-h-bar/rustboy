@@ -7,6 +7,7 @@ use instructions::Instruction;
 use register::Register;
 use std::fs::{File, OpenOptions};
 use std::io::{BufWriter, Write};
+use crate::tpu::Timer;
 
 mod actions;
 mod addresses;
@@ -15,6 +16,7 @@ mod instructions;
 mod register;
 
 pub struct CPU {
+    timer: Timer,
     register: Register,
     bus: Bus,
     fetch_data: u16,
@@ -30,13 +32,14 @@ pub struct CPU {
     ie_register: u8,
     cycle: u32,
     log: String,
-    debug_message: String,
-    emu_cycles: u8,
+    debug_message: String
 }
 
 impl CPU {
     pub fn from(bus: Bus) -> Self {
+        let timer = Timer::new();
         Self {
+            timer,
             register: Register {
                 a: 0x1,
                 f: 0,
@@ -63,13 +66,14 @@ impl CPU {
             ie_register: 0,
             cycle: 0,
             log: String::new(),
-            debug_message: String::new(),
-            emu_cycles: 0,
+            debug_message: String::new()
         }
     }
 
     pub fn test(bus: Bus) -> Self {
+        let timer = Timer::new();
         Self {
+            timer,
             register: Register {
                 a: 0x01,
                 f: 0xB0,
@@ -97,12 +101,10 @@ impl CPU {
             cycle: 0,
             log: String::new(),
             debug_message: String::new(),
-            emu_cycles: 0,
         }
     }
 
-    pub fn step(&mut self) -> u8 {
-        self.emu_cycles = 0;
+    pub fn step(&mut self) {
         self.log();
         self.debug_update();
         self.debug_print();
@@ -113,7 +115,7 @@ impl CPU {
 
             self.cycle += 1;
         } else {
-            self.emu_cycles += 1;
+            self.timer.emu_cycles(1);
 
             if self.int_flags != 0 {
                 self.halted = false;
@@ -128,8 +130,6 @@ impl CPU {
         if self.enabling_ime {
             self.master_enabled = true;
         }
-
-        self.emu_cycles
     }
 
     fn log_to_stdout(&self) {
@@ -393,9 +393,9 @@ impl CPU {
 
         if instruction.condition.check(self) {
             let lo = self.stack_pop();
-            self.emu_cycles += 1;
+            self.timer.emu_cycles(1);
             let hi = self.stack_pop();
-            self.emu_cycles += 1;
+            self.timer.emu_cycles(1);
             self.register.pc = (hi << 8) | lo;
             EMU::cycles(1)
         }
