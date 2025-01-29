@@ -70,6 +70,4 @@ impl EMU {
             self.cpu.step();
         }
     }
-
-    pub fn cycles(cycle: u8) {}
 }
