@@ -2,7 +2,10 @@ use crate::cpu::CPU;
 use crate::interrupts;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
-#[derive(Debug)]
+
+static TIMER: OnceLock<Mutex<Timer>> = OnceLock::new();
+
+
 pub struct Timer {
     div: u16,
     tima: u8,
@@ -23,7 +26,6 @@ impl Timer {
     }
 
     pub fn get() -> MutexGuard<'static, Timer> {
-        static TIMER: OnceLock<Mutex<Timer>> = OnceLock::new();
         TIMER.get_or_init(|| Mutex::new(Timer::new())).lock().unwrap()
     }
 
