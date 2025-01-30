@@ -538,7 +538,7 @@ impl Bus {
         }
 
         if (0xFF04 <= address) && (address <= 0xFF07) {
-            return  0
+            return 0;
         }
         0
     }

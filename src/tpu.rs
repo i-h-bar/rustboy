@@ -1,10 +1,8 @@
 use crate::cpu::CPU;
 use crate::interrupts;
-use std::sync::{Mutex, MutexGuard, OnceLock};
+use std::sync::{LazyLock, Mutex, MutexGuard};
 
-
-static TIMER: OnceLock<Mutex<Timer>> = OnceLock::new();
-
+static TIMER: LazyLock<Mutex<Timer>> = LazyLock::new(|| Mutex::new(Timer::new()));
 
 pub struct Timer {
     div: u16,
@@ -26,7 +24,7 @@ impl Timer {
     }
 
     pub fn get() -> MutexGuard<'static, Timer> {
-        TIMER.get_or_init(|| Mutex::new(Timer::new())).lock().unwrap()
+        TIMER.lock().expect("Could not acquire timer lock")
     }
 
     pub fn emu_cycles(&mut self, n: u8, cpu: &mut CPU) {

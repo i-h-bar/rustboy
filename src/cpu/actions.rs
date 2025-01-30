@@ -2,9 +2,9 @@ use crate::cpu::addresses::AddressMode;
 use crate::cpu::instructions::Instruction;
 use crate::cpu::register::RegisterType;
 use crate::cpu::{register, CPU};
+use crate::tpu::Timer;
 use std::fmt;
 use std::fmt::Debug;
-use crate::tpu::Timer;
 
 #[derive(Debug)]
 pub enum Action {

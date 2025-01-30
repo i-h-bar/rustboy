@@ -388,7 +388,7 @@ impl CPU {
     fn return_from_procedure(&mut self, instruction: &Instruction) {
         match self.instruction.condition {
             ConditionType::NONE => {}
-            _ => { Timer::get().emu_cycles(1, self) },
+            _ => Timer::get().emu_cycles(1, self),
         }
 
         if instruction.condition.check(self) {
