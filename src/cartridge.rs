@@ -448,7 +448,7 @@ pub struct Bus {
     cartridge: Cartridge,
     ram: RAM,
     ie_register: u8,
-    serial_data: [u8; 2]
+    serial_data: [u8; 2],
 }
 
 impl Bus {
@@ -458,7 +458,7 @@ impl Bus {
             cartridge,
             ram,
             ie_register: 0,
-            serial_data: [0; 2]
+            serial_data: [0; 2],
         }
     }
 
@@ -530,8 +530,16 @@ impl Bus {
     }
 
     fn io_read(&self, address: u16) -> u8 {
-        if address == 0xFF01 { return self.serial_data[0]; }
-        if address == 0xFF02 { return self.serial_data[1]; }
+        if address == 0xFF01 {
+            return self.serial_data[0];
+        }
+        if address == 0xFF02 {
+            return self.serial_data[1];
+        }
+
+        if (0xFF04 <= address) && (address <= 0xFF07) {
+            return  0
+        }
         0
     }
 

@@ -4,6 +4,7 @@ use crate::cpu::register::RegisterType;
 use crate::cpu::{register, CPU};
 use std::fmt;
 use std::fmt::Debug;
+use crate::tpu::Timer;
 
 #[derive(Debug)]
 pub enum Action {
@@ -72,7 +73,7 @@ impl Action {
             Action::LD => {
                 if cpu.dest_is_mem {
                     if cpu.register.is_16bit(instruction.register_2) {
-                        cpu.timer.emu_cycles(1);
+                        Timer::get().emu_cycles(1, cpu);
                         cpu.bus.write16(cpu.mem_dest, cpu.fetch_data);
                     } else {
                         cpu.bus.write(cpu.mem_dest, cpu.fetch_data as u8);
@@ -104,7 +105,7 @@ impl Action {
             }
             Action::INC => {
                 if cpu.register.is_16bit(instruction.register_1) {
-                    cpu.timer.emu_cycles(1);
+                    Timer::get().emu_cycles(1, cpu);
                 }
 
                 if *instruction.register_1 == RegisterType::HL
@@ -130,7 +131,7 @@ impl Action {
             }
             Action::DEC => {
                 if cpu.register.is_16bit(instruction.register_1) {
-                    cpu.timer.emu_cycles(1);
+                    Timer::get().emu_cycles(1, cpu);
                 }
 
                 if *instruction.register_1 == RegisterType::HL
@@ -169,7 +170,7 @@ impl Action {
                 let is_16bit = cpu.register.is_16bit(instruction.register_1);
 
                 if is_16bit {
-                    cpu.timer.emu_cycles(1);
+                    Timer::get().emu_cycles(1, cpu);
                 }
 
                 if *instruction.register_1 == RegisterType::SP {
@@ -381,9 +382,9 @@ impl Action {
             }
             Action::POP => {
                 let lo = cpu.stack_pop();
-                cpu.timer.emu_cycles(1);
+                Timer::get().emu_cycles(1, cpu);
                 let hi = cpu.stack_pop();
-                cpu.timer.emu_cycles(1);
+                Timer::get().emu_cycles(1, cpu);
 
                 let num = (hi << 8) | lo;
 
@@ -397,14 +398,14 @@ impl Action {
             }
             Action::PUSH => {
                 let hi = (cpu.read_register(instruction.register_1) >> 8) & 0xFF;
-                cpu.timer.emu_cycles(1);
+                Timer::get().emu_cycles(1, cpu);
                 cpu.stack_push(hi as u8);
 
                 let lo = cpu.read_register(instruction.register_1) & 0xFF;
-                cpu.timer.emu_cycles(1);
+                Timer::get().emu_cycles(1, cpu);
                 cpu.stack_push(lo as u8);
 
-                cpu.timer.emu_cycles(1);
+                Timer::get().emu_cycles(1, cpu);
             }
             Action::RET => cpu.return_from_procedure(&instruction),
             Action::CB => {
@@ -414,10 +415,10 @@ impl Action {
                 let bit_op = (op >> 6) & 0b11;
                 let mut reg_val = cpu.read_register8(&reg);
 
-                cpu.timer.emu_cycles(1);
+                Timer::get().emu_cycles(1, cpu);
 
                 if reg == &RegisterType::HL {
-                    cpu.timer.emu_cycles(2);
+                    Timer::get().emu_cycles(2, cpu);
                 }
 
                 match bit_op {
@@ -563,7 +564,7 @@ impl Action {
                     _ => cpu.bus.write(cpu.mem_dest, cpu.register.a as u8),
                 }
 
-                cpu.timer.emu_cycles(1);
+                Timer::get().emu_cycles(1, cpu);
             }
             Action::JPHL => {}
             Action::DI => {

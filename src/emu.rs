@@ -1,12 +1,10 @@
 #[allow(dead_code)]
-
 use std::thread;
 use std::time::Duration;
 
 use crate::cartridge::{Bus, Cartridge};
 use crate::cpu::CPU;
 use crate::ppu::PPU;
-use crate::tpu::Timer;
 
 pub struct EMU {
     cpu: CPU,
@@ -50,7 +48,6 @@ impl EMU {
         let bus = Bus::from(cartridge);
         let cpu = CPU::test(bus);
         let ppu = PPU {};
-        let timer = Timer::new();
 
         EMU {
             cpu,

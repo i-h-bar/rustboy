@@ -8,7 +8,7 @@ pub enum Interrupt {
 
 const V_BLANK: u8 = 1;
 const LCD_STRAT: u8 = 2;
-const TIMER: u8 = 4;
+pub const TIMER: u8 = 4;
 const SERIAL: u8 = 8;
 const JOY_PAD: u8 = 16;
 

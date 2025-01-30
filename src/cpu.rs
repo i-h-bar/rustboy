@@ -15,7 +15,6 @@ mod instructions;
 mod register;
 
 pub struct CPU {
-    timer: Timer,
     register: Register,
     bus: Bus,
     fetch_data: u16,
@@ -36,9 +35,7 @@ pub struct CPU {
 
 impl CPU {
     pub fn from(bus: Bus) -> Self {
-        let timer = Timer::new();
         Self {
-            timer,
             register: Register {
                 a: 0x1,
                 f: 0,
@@ -70,9 +67,7 @@ impl CPU {
     }
 
     pub fn test(bus: Bus) -> Self {
-        let timer = Timer::new();
         Self {
-            timer,
             register: Register {
                 a: 0x01,
                 f: 0xB0,
@@ -114,7 +109,7 @@ impl CPU {
 
             self.cycle += 1;
         } else {
-            self.timer.emu_cycles(1);
+            Timer::get().emu_cycles(1, self);
 
             if self.int_flags != 0 {
                 self.halted = false;
@@ -129,6 +124,10 @@ impl CPU {
         if self.enabling_ime {
             self.master_enabled = true;
         }
+    }
+
+    pub fn request_interrupt(&mut self, it_timer: u8) {
+        todo!()
     }
 
     fn log_to_stdout(&self) {
@@ -377,28 +376,28 @@ impl CPU {
     fn go_to(&mut self, address: u16, push_pc: bool, instruction: &Instruction) {
         if instruction.condition.check(self) {
             if push_pc {
-                self.timer.emu_cycles(2);
+                Timer::get().emu_cycles(2, self);
                 self.stack_push16(self.register.pc)
             }
 
             self.register.pc = address;
-            self.timer.emu_cycles(1);
+            Timer::get().emu_cycles(1, self);
         }
     }
 
     fn return_from_procedure(&mut self, instruction: &Instruction) {
         match self.instruction.condition {
             ConditionType::NONE => {}
-            _ => self.timer.emu_cycles(1),
+            _ => { Timer::get().emu_cycles(1, self) },
         }
 
         if instruction.condition.check(self) {
             let lo = self.stack_pop();
-            self.timer.emu_cycles(1);
+            Timer::get().emu_cycles(1, self);
             let hi = self.stack_pop();
-            self.timer.emu_cycles(1);
+            Timer::get().emu_cycles(1, self);
             self.register.pc = (hi << 8) | lo;
-            self.timer.emu_cycles(1);
+            Timer::get().emu_cycles(1, self);
         }
     }
 }

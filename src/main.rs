@@ -8,7 +8,7 @@ mod cpu;
 mod emu;
 mod interrupts;
 mod ppu;
-mod tpu;
+pub mod tpu;
 
 fn main() {
     let mut emulation = EMU::test(3);
