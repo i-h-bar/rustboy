@@ -1,10 +1,10 @@
-#[allow(dead_code)]
-use std::thread;
-use std::time::Duration;
 use crate::bus::Bus;
 use crate::cartridge::Cartridge;
 use crate::cpu::CPU;
 use crate::ppu::PPU;
+#[allow(dead_code)]
+use std::thread;
+use std::time::Duration;
 
 pub struct EMU {
     cpu: CPU,

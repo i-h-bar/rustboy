@@ -11,7 +11,7 @@ pub struct Instruction {
     pub register_2: &'static RegisterType,
     pub condition: &'static ConditionType,
     pub param: &'static u16,
-    pub opcode: u8
+    pub opcode: u8,
 }
 
 impl Instruction {
@@ -26,7 +26,7 @@ impl Instruction {
             register_2,
             condition,
             param,
-            opcode
+            opcode,
         }
     }
 

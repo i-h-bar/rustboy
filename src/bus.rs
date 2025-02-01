@@ -1,16 +1,14 @@
-use std::sync::{OnceLock, Mutex, MutexGuard};
 use crate::cartridge::Cartridge;
 use crate::cpu::CPU;
 use crate::tpu::Timer;
+use std::sync::{Mutex, MutexGuard, OnceLock};
 
 static BUS: OnceLock<Mutex<Bus>> = OnceLock::new();
-
 
 struct RAM {
     wram: Vec<u8>,
     hram: Vec<u8>,
 }
-
 
 impl RAM {
     fn new() -> Self {
@@ -41,7 +39,6 @@ impl RAM {
     }
 }
 
-
 pub struct Bus {
     cartridge: Cartridge,
     ram: RAM,
@@ -55,7 +52,10 @@ impl Bus {
     }
 
     pub fn get() -> MutexGuard<'static, Bus> {
-        BUS.get().expect("Bus is not initialized").lock().expect("Could not get lock on Bus")
+        BUS.get()
+            .expect("Bus is not initialised")
+            .lock()
+            .expect("Could not get lock on Bus")
     }
 
     fn from(cartridge: Cartridge) -> Self {
@@ -155,7 +155,6 @@ impl Bus {
         }
 
         println!("Unsupported IO write {:#05x}", address);
-
     }
 
     fn io_read(&self, address: u16, cpu: &CPU) -> u8 {

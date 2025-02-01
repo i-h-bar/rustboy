@@ -1,3 +1,4 @@
+use crate::bus::Bus;
 use crate::cpu::addresses::AddressMode;
 use crate::cpu::instructions::Instruction;
 use crate::cpu::register::RegisterType;
@@ -5,7 +6,6 @@ use crate::cpu::{register, CPU};
 use crate::tpu::Timer;
 use std::fmt;
 use std::fmt::Debug;
-use crate::bus::Bus;
 
 #[derive(Debug)]
 pub enum Action {
@@ -112,12 +112,12 @@ impl Action {
                 if *instruction.register_1 == RegisterType::HL
                     && instruction.address == &AddressMode::MR
                 {
-                    let val =
-                        Bus::get().read(cpu.read_register(instruction.register_1), &cpu).wrapping_add(1);
+                    let val = Bus::get()
+                        .read(cpu.read_register(instruction.register_1), &cpu)
+                        .wrapping_add(1);
                     let val = val & 0xFF;
 
-                    Bus::get()
-                        .write(cpu.read_register(instruction.register_1), val as u8, cpu)
+                    Bus::get().write(cpu.read_register(instruction.register_1), val as u8, cpu)
                 } else {
                     let val = cpu.read_register(instruction.register_1).wrapping_add(1);
                     cpu.set_register(instruction.register_1, val)
@@ -138,11 +138,11 @@ impl Action {
                 if *instruction.register_1 == RegisterType::HL
                     && *instruction.address == AddressMode::MR
                 {
-                    let val = (Bus::get().read(cpu.read_register(instruction.register_1), &cpu) as u8)
+                    let val = (Bus::get().read(cpu.read_register(instruction.register_1), &cpu)
+                        as u8)
                         .wrapping_sub(1);
 
-                    Bus::get()
-                        .write(cpu.read_register(instruction.register_1), val, cpu)
+                    Bus::get().write(cpu.read_register(instruction.register_1), val, cpu)
                 } else {
                     let val = (cpu.read_register(instruction.register_1) as u8).wrapping_sub(1);
 

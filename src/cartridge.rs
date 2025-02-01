@@ -1,8 +1,8 @@
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::fs;
 use std::io::Write;
-use lazy_static::lazy_static;
 lazy_static! {
     static ref LIC_MAP: HashMap<&'static str, &'static str> = [
         ("00", "None"),
@@ -408,7 +408,6 @@ impl Cartridge {
         self.rom_data[address as usize] = value;
     }
 }
-
 
 #[cfg(test)]
 mod tests {
