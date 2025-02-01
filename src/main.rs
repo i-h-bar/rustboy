@@ -9,8 +9,9 @@ mod emu;
 mod interrupts;
 mod ppu;
 pub mod tpu;
+mod bus;
 
 fn main() {
-    let mut emulation = EMU::test(3);
+    let mut emulation = EMU::test(1);
     emulation.run();
 }

@@ -1,3 +1,4 @@
+use crate::bus::Bus;
 use crate::cpu::instructions::Instruction;
 use crate::cpu::register::RegisterType;
 use crate::cpu::CPU;
@@ -38,9 +39,9 @@ impl AddressMode {
             AddressMode::NONE => {}
             AddressMode::IMP => {}
             AddressMode::RD16 | AddressMode::D16 => {
-                let lo = cpu.bus.read(cpu.register.pc);
+                let lo = Bus::get().read(cpu.register.pc, &cpu);
                 Timer::get().emu_cycles(1, cpu);
-                let hi = cpu.bus.read(cpu.register.pc + 1);
+                let hi = Bus::get().read(cpu.register.pc + 1, &cpu);
                 Timer::get().emu_cycles(1, cpu);
                 cpu.register.pc += 2;
 
@@ -59,7 +60,7 @@ impl AddressMode {
             }
             AddressMode::R => cpu.fetch_data = cpu.read_register(instruction.register_1),
             AddressMode::RD8 => {
-                cpu.fetch_data = cpu.bus.read(cpu.register.pc);
+                cpu.fetch_data = Bus::get().read(cpu.register.pc, &cpu);
                 Timer::get().emu_cycles(1, cpu);
                 cpu.register.pc += 1;
             }
@@ -69,16 +70,16 @@ impl AddressMode {
                     RegisterType::C => address |= 0xFF00,
                     _ => {}
                 }
-                cpu.fetch_data = cpu.bus.read(address);
+                cpu.fetch_data = Bus::get().read(address, &cpu);
                 Timer::get().emu_cycles(1, cpu);
             }
             AddressMode::RHLI => {
-                cpu.fetch_data = cpu.bus.read(cpu.read_register(instruction.register_2));
+                cpu.fetch_data = Bus::get().read(cpu.read_register(instruction.register_2), &cpu);
                 Timer::get().emu_cycles(1, cpu);
                 cpu.set_register(&RegisterType::HL, cpu.read_register(&RegisterType::HL) + 1)
             }
             AddressMode::RHLD => {
-                cpu.fetch_data = cpu.bus.read(cpu.read_register(instruction.register_2));
+                cpu.fetch_data = Bus::get().read(cpu.read_register(instruction.register_2), &cpu);
                 Timer::get().emu_cycles(1, cpu);
                 cpu.set_register(&RegisterType::HL, cpu.read_register(&RegisterType::HL) - 1)
             }
@@ -95,31 +96,31 @@ impl AddressMode {
                 cpu.set_register(&RegisterType::HL, cpu.read_register(&RegisterType::HL) - 1);
             }
             AddressMode::RA8 => {
-                cpu.fetch_data = cpu.bus.read(cpu.register.pc);
+                cpu.fetch_data = Bus::get().read(cpu.register.pc, &cpu);
                 Timer::get().emu_cycles(1, cpu);
                 cpu.register.pc += 1;
             }
             AddressMode::A8R => {
-                cpu.mem_dest = cpu.bus.read(cpu.register.pc) | 0xFF00;
+                cpu.mem_dest = Bus::get().read(cpu.register.pc, &cpu) | 0xFF00;
                 cpu.dest_is_mem = true;
                 Timer::get().emu_cycles(1, cpu);
                 cpu.register.pc += 1;
             }
             AddressMode::HLSPR => {
-                cpu.fetch_data = cpu.bus.read(cpu.register.pc);
+                cpu.fetch_data = Bus::get().read(cpu.register.pc, &cpu);
                 Timer::get().emu_cycles(1, cpu);
                 cpu.register.pc += 1;
             }
             AddressMode::D8 => {
-                cpu.fetch_data = cpu.bus.read(cpu.register.pc);
+                cpu.fetch_data = Bus::get().read(cpu.register.pc, &cpu);
                 Timer::get().emu_cycles(1, cpu);
                 cpu.register.pc += 1;
             }
             AddressMode::D16R | AddressMode::A16R => {
-                let lo = cpu.bus.read(cpu.register.pc);
+                let lo = Bus::get().read(cpu.register.pc, &cpu);
                 Timer::get().emu_cycles(1, cpu);
 
-                let hi = cpu.bus.read(cpu.register.pc + 1);
+                let hi = Bus::get().read(cpu.register.pc + 1, &cpu);
                 Timer::get().emu_cycles(1, cpu);
 
                 cpu.mem_dest = lo | (hi << 8);
@@ -129,7 +130,7 @@ impl AddressMode {
                 cpu.fetch_data = cpu.read_register(instruction.register_2);
             }
             AddressMode::MRD8 => {
-                cpu.fetch_data = cpu.bus.read(cpu.register.pc);
+                cpu.fetch_data = Bus::get().read(cpu.register.pc, &cpu);
                 Timer::get().emu_cycles(1, cpu);
                 cpu.register.pc += 1;
                 cpu.mem_dest = cpu.read_register(instruction.register_1);
@@ -138,20 +139,20 @@ impl AddressMode {
             AddressMode::MR => {
                 cpu.mem_dest = cpu.read_register(instruction.register_1);
                 cpu.dest_is_mem = true;
-                cpu.fetch_data = cpu.bus.read(cpu.read_register(instruction.register_1));
+                cpu.fetch_data = Bus::get().read(cpu.read_register(instruction.register_1), &cpu);
                 Timer::get().emu_cycles(1, cpu);
             }
             AddressMode::RA16 => {
-                let lo = cpu.bus.read(cpu.register.pc);
+                let lo = Bus::get().read(cpu.register.pc, &cpu);
                 Timer::get().emu_cycles(1, cpu);
 
-                let hi = cpu.bus.read(cpu.register.pc + 1);
+                let hi = Bus::get().read(cpu.register.pc + 1, &cpu);
                 Timer::get().emu_cycles(1, cpu);
 
                 let address = lo | (hi << 8);
 
                 cpu.register.pc += 2;
-                cpu.fetch_data = cpu.bus.read(address);
+                cpu.fetch_data = Bus::get().read(address, &cpu);
                 Timer::get().emu_cycles(1, cpu);
             }
         }

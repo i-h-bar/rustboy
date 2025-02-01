@@ -1,4 +1,4 @@
-use crate::cartridge::Bus;
+use crate::bus::Bus;
 use crate::cpu::{conditions::ConditionType, register::RegisterType};
 use crate::interrupts;
 use crate::interrupts::Interrupt;
@@ -16,7 +16,6 @@ mod register;
 
 pub struct CPU {
     register: Register,
-    bus: Bus,
     fetch_data: u16,
     mem_dest: u16,
     dest_is_mem: bool,
@@ -26,7 +25,7 @@ pub struct CPU {
     stepping: bool,
     master_enabled: bool,
     enabling_ime: bool,
-    int_flags: u8,
+    pub int_flags: u8,
     ie_register: u8,
     cycle: u32,
     log: String,
@@ -34,7 +33,7 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn from(bus: Bus) -> Self {
+    pub fn new() -> Self {
         Self {
             register: Register {
                 a: 0x1,
@@ -48,7 +47,6 @@ impl CPU {
                 sp: 0,
                 pc: 0x100,
             },
-            bus,
             fetch_data: 0,
             mem_dest: 0,
             dest_is_mem: false,
@@ -66,7 +64,7 @@ impl CPU {
         }
     }
 
-    pub fn test(bus: Bus) -> Self {
+    pub fn test() -> Self {
         Self {
             register: Register {
                 a: 0x01,
@@ -80,7 +78,6 @@ impl CPU {
                 sp: 0xFFFE,
                 pc: 0x0100,
             },
-            bus,
             fetch_data: 0,
             mem_dest: 0,
             dest_is_mem: false,
@@ -102,7 +99,7 @@ impl CPU {
         self.log();
         self.debug_update();
         self.debug_print();
-        // self.log_to_stdout();
+        self.log_to_stdout();
         if !self.halted {
             let instruction = self.fetch_instruction();
             instruction.execute(self);
@@ -176,6 +173,18 @@ impl CPU {
     }
 
     fn log(&mut self) {
+        let data_pc: u16;
+        { data_pc = Bus::get().read(self.register.pc, &self) }
+
+        let data_pc_1: u16;
+        { data_pc_1 = Bus::get().read(self.register.pc + 1, &self) }
+
+        let data_pc_2: u16;
+        { data_pc_2 = Bus::get().read(self.register.pc + 2, &self) }
+
+        let data_pc_3: u16;
+        { data_pc_3 = Bus::get().read(self.register.pc + 3, &self) }
+
         let log = format!(
             "A:{:#04X} F:{:#04X} B:{:#04X} C:{:#04X} D:{:#04X} E:{:#04X} H:{:#04X} L:{:#04X} SP:{:#06X} PC:{:#06X} PCMEM:{:#04X},{:#04X},{:#04X},{:#04X}\n",
             self.register.a,
@@ -188,10 +197,10 @@ impl CPU {
             self.register.l,
             self.register.sp,
             self.register.pc,
-            self.bus.read(self.register.pc),
-            self.bus.read(self.register.pc + 1),
-            self.bus.read(self.register.pc + 2),
-            self.bus.read(self.register.pc + 3),
+            data_pc,
+            data_pc_1,
+            data_pc_2,
+            data_pc_3,
         ).replace("0x", "");
         self.log.push_str(&log);
     }
@@ -208,9 +217,9 @@ impl CPU {
     }
 
     fn debug_update(&mut self) {
-        if self.bus.read(0xFF02) as u8 == 0x81 {
-            self.debug_message.push(self.bus.read(0xFF01) as u8 as char);
-            self.bus.write(0xFF02, 0x00);
+        if Bus::get().read(0xFF02, &self) as u8 == 0x81 {
+            self.debug_message.push(Bus::get().read(0xFF01, &self) as u8 as char);
+            Bus::get().write(0xFF02, 0x00, self);
         }
     }
 
@@ -250,7 +259,7 @@ impl CPU {
     }
 
     fn fetch_instruction(&mut self) -> Instruction {
-        self.current_op_code = self.bus.read(self.register.pc) as u8;
+        self.current_op_code = Bus::get().read(self.register.pc, &self) as u8;
         self.register.pc += 1;
         Instruction::from(self.current_op_code)
     }
@@ -285,7 +294,7 @@ impl CPU {
             RegisterType::E => self.register.e as u8,
             RegisterType::H => self.register.h as u8,
             RegisterType::L => self.register.l as u8,
-            RegisterType::HL => self.bus.read(self.read_register(register)) as u8,
+            RegisterType::HL => Bus::get().read(self.read_register(register), &self) as u8,
             _ => panic!("{:?} is not a valid 8bit register", register),
         }
     }
@@ -300,7 +309,7 @@ impl CPU {
             RegisterType::E => self.register.e = (value & 0xFF) as u16,
             RegisterType::H => self.register.h = (value & 0xFF) as u16,
             RegisterType::L => self.register.l = (value & 0xFF) as u16,
-            RegisterType::HL => self.bus.write(self.read_register(register), value),
+            RegisterType::HL => Bus::get().write(self.read_register(register), value, self),
             _ => panic!("{:?} is not a valid 8bit register", register),
         }
     }
@@ -351,7 +360,7 @@ impl CPU {
 
     fn stack_push(&mut self, data: u8) {
         self.register.sp = self.register.sp.wrapping_sub(1);
-        self.bus.write(self.register.sp, data);
+        Bus::get().write(self.register.sp, data, self);
     }
 
     fn stack_push16(&mut self, data: u16) {
@@ -360,7 +369,7 @@ impl CPU {
     }
 
     fn stack_pop(&mut self) -> u16 {
-        let data = self.bus.read(self.register.sp);
+        let data = Bus::get().read(self.register.sp, &self);
         self.register.sp += 1;
 
         data

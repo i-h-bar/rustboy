@@ -5,6 +5,7 @@ use crate::cpu::{register, CPU};
 use crate::tpu::Timer;
 use std::fmt;
 use std::fmt::Debug;
+use crate::bus::Bus;
 
 #[derive(Debug)]
 pub enum Action {
@@ -74,9 +75,9 @@ impl Action {
                 if cpu.dest_is_mem {
                     if cpu.register.is_16bit(instruction.register_2) {
                         Timer::get().emu_cycles(1, cpu);
-                        cpu.bus.write16(cpu.mem_dest, cpu.fetch_data);
+                        Bus::get().write16(cpu.mem_dest, cpu.fetch_data, cpu);
                     } else {
-                        cpu.bus.write(cpu.mem_dest, cpu.fetch_data as u8);
+                        Bus::get().write(cpu.mem_dest, cpu.fetch_data as u8, cpu);
                     }
                 } else {
                     if *instruction.address == AddressMode::HLSPR {
@@ -112,11 +113,11 @@ impl Action {
                     && instruction.address == &AddressMode::MR
                 {
                     let val =
-                        (cpu.bus.read(cpu.read_register(instruction.register_1))).wrapping_add(1);
+                        Bus::get().read(cpu.read_register(instruction.register_1), &cpu).wrapping_add(1);
                     let val = val & 0xFF;
 
-                    cpu.bus
-                        .write(cpu.read_register(instruction.register_1), val as u8)
+                    Bus::get()
+                        .write(cpu.read_register(instruction.register_1), val as u8, cpu)
                 } else {
                     let val = cpu.read_register(instruction.register_1).wrapping_add(1);
                     cpu.set_register(instruction.register_1, val)
@@ -137,11 +138,11 @@ impl Action {
                 if *instruction.register_1 == RegisterType::HL
                     && *instruction.address == AddressMode::MR
                 {
-                    let val = (cpu.bus.read(cpu.read_register(instruction.register_1)) as u8)
+                    let val = (Bus::get().read(cpu.read_register(instruction.register_1), &cpu) as u8)
                         .wrapping_sub(1);
 
-                    cpu.bus
-                        .write(cpu.read_register(instruction.register_1), val)
+                    Bus::get()
+                        .write(cpu.read_register(instruction.register_1), val, cpu)
                 } else {
                     let val = (cpu.read_register(instruction.register_1) as u8).wrapping_sub(1);
 
@@ -559,9 +560,9 @@ impl Action {
                 match instruction.register_1 {
                     RegisterType::A => cpu.set_register(
                         instruction.register_1,
-                        cpu.bus.read(0xFF00 | cpu.fetch_data),
+                        Bus::get().read(0xFF00 | cpu.fetch_data, &cpu),
                     ),
-                    _ => cpu.bus.write(cpu.mem_dest, cpu.register.a as u8),
+                    _ => Bus::get().write(cpu.mem_dest, cpu.register.a as u8, cpu),
                 }
 
                 Timer::get().emu_cycles(1, cpu);

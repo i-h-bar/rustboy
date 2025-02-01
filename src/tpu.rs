@@ -73,7 +73,7 @@ impl Timer {
         }
     }
 
-    fn write(&mut self, address: u16, value: u8) {
+    pub fn write(&mut self, address: u16, value: u8) {
         match address {
             0xFF04 => self.div = 0,
             0xFF05 => self.tima = value,
@@ -83,7 +83,7 @@ impl Timer {
         }
     }
 
-    fn read(&self, address: u16) -> u8 {
+    pub fn read(&self, address: u16) -> u8 {
         match address {
             0xFF04 => (self.div >> 8) as u8,
             0xFF05 => self.tima,

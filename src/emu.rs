@@ -1,8 +1,8 @@
 #[allow(dead_code)]
 use std::thread;
 use std::time::Duration;
-
-use crate::cartridge::{Bus, Cartridge};
+use crate::bus::Bus;
+use crate::cartridge::Cartridge;
 use crate::cpu::CPU;
 use crate::ppu::PPU;
 
@@ -16,8 +16,8 @@ pub struct EMU {
 impl EMU {
     pub fn from(file: &str) -> Self {
         let cartridge = Cartridge::from(file);
-        let bus = Bus::from(cartridge);
-        let cpu = CPU::from(bus);
+        Bus::init(cartridge);
+        let cpu = CPU::new();
         let ppu = PPU {};
 
         EMU {
@@ -45,8 +45,8 @@ impl EMU {
         };
 
         let cartridge = Cartridge::from(file);
-        let bus = Bus::from(cartridge);
-        let cpu = CPU::test(bus);
+        Bus::init(cartridge);
+        let cpu = CPU::test();
         let ppu = PPU {};
 
         EMU {
