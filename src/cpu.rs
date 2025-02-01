@@ -99,7 +99,7 @@ impl CPU {
         self.log();
         self.debug_update();
         self.debug_print();
-        self.log_to_stdout();
+        // self.log_to_stdout();
         if !self.halted {
             let instruction = self.fetch_instruction();
             instruction.execute(self);
@@ -173,17 +173,10 @@ impl CPU {
     }
 
     fn log(&mut self) {
-        let data_pc: u16;
-        { data_pc = Bus::get().read(self.register.pc, &self) }
-
-        let data_pc_1: u16;
-        { data_pc_1 = Bus::get().read(self.register.pc + 1, &self) }
-
-        let data_pc_2: u16;
-        { data_pc_2 = Bus::get().read(self.register.pc + 2, &self) }
-
-        let data_pc_3: u16;
-        { data_pc_3 = Bus::get().read(self.register.pc + 3, &self) }
+        let data_pc: u16 = Bus::get().read(self.register.pc, &self);
+        let data_pc_1: u16 = Bus::get().read(self.register.pc + 1, &self);
+        let data_pc_2: u16 = Bus::get().read(self.register.pc + 2, &self);
+        let data_pc_3: u16 = Bus::get().read(self.register.pc + 3, &self);
 
         let log = format!(
             "A:{:#04X} F:{:#04X} B:{:#04X} C:{:#04X} D:{:#04X} E:{:#04X} H:{:#04X} L:{:#04X} SP:{:#06X} PC:{:#06X} PCMEM:{:#04X},{:#04X},{:#04X},{:#04X}\n",
