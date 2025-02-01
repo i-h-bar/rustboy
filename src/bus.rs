@@ -72,16 +72,20 @@ impl Bus {
         if address < 0x8000 {
             self.cartridge.read(address) as u16
         } else if address < 0xA000 {
-            todo!() // 0
+            println!("Reading unimplemented address {:04X}", address);
+            todo!()
         } else if address < 0xC000 {
             self.cartridge.read(address) as u16
         } else if address < 0xE000 {
             self.ram.wram_read(address) as u16
         } else if address < 0xFE00 {
+            println!("Reading reserved address {:04X}", address);
             0
         } else if address < 0xFEA0 {
-            todo!() // 0
+            println!("Reading unimplemented address {:04X}", address);
+            todo!()
         } else if address < 0xFF00 {
+            println!("Reading reserved address {:04X}", address);
             0
         } else if address < 0xFF80 {
             self.io_read(address, &cpu) as u16
@@ -96,6 +100,7 @@ impl Bus {
         if address < 0x8000 {
             self.cartridge.write(address, value)
         } else if address < 0xA000 {
+            println!("Unsupported write to address: {:#05x}", address);
             todo!()
         } else if address < 0xC000 {
             self.cartridge.write(address, value)
@@ -107,6 +112,7 @@ impl Bus {
                 address
             )
         } else if address < 0xFEA0 {
+            println!("Unsupported write to address: {:#05x}", address);
             todo!()
         } else if address < 0xFF00 {
             panic!(
@@ -133,6 +139,7 @@ impl Bus {
         }
 
         if (0xFF04 <= address) && (address <= 0xFF07) {
+            println!("{:#05x}", address);
             Timer::get().write(address, value);
             return;
         }
@@ -142,7 +149,13 @@ impl Bus {
             return;
         }
 
-        todo!()
+        if (0xFF10 <= address) && (address <= 0xFF3F) {
+            println!("Ignore sound {:#05x}", address);
+            return;
+        }
+
+        println!("Unsupported IO write {:#05x}", address);
+
     }
 
     fn io_read(&self, address: u16, cpu: &CPU) -> u8 {
@@ -158,9 +171,10 @@ impl Bus {
         }
 
         if address == 0xFF0F {
-            return cpu.int_flags
+            return cpu.int_flags;
         }
 
+        // println!("Unsupported IO read {:#05x}", address);
         0
     }
 

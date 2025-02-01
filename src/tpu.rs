@@ -15,7 +15,7 @@ pub struct Timer {
 impl Timer {
     fn new() -> Self {
         Self {
-            div: 0xAC00,
+            div: 0xABCC,
             tima: 0,
             tma: 0,
             tac: 0,
@@ -64,7 +64,7 @@ impl Timer {
             _ => {}
         }
 
-        if update_timer && self.tac & (1 << 2) != 0 {
+        if update_timer && (self.tac & (1 << 2) != 0) {
             if self.tima == 0xFF {
                 self.tima = self.tma;
 

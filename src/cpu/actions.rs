@@ -192,7 +192,7 @@ impl Action {
                     cpu.register.set_c(
                         (cpu.read_register(instruction.register_1) & 0xFF)
                             .wrapping_add(cpu.fetch_data & 0xFF)
-                            > 0x100,
+                            >= 0x100,
                     );
                 } else if is_16bit {
                     cpu.register.set_n(true);
